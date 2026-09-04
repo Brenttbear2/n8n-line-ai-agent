@@ -71,7 +71,7 @@
       "parameters": {
         "operation": "showLoadingAnimation",
         "chatId": "={{ $('Line Messaging Trigger').first().json.source.userId }}",
-        "loadingSeconds": 30
+        "loadingSeconds": 60
       },
       "id": "e7c1a2b3-4d5e-4f6a-8b9c-0d1e2f3a4b5c",
       "name": "顯示輸入中動畫",
