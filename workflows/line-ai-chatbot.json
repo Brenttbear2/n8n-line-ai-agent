@@ -116,7 +116,7 @@
         "promptType": "define",
         "text": "={{ $('Line Messaging Trigger').first().json.message.text ?? $('圖片辨識').first().json.output }}",
         "options": {
-          "systemMessage": "=【現在確切時間是 {{ $now.format('yyyy-MM-dd (EEEE) HH:mm') }}（時區 Asia/Taipei）】若使用者問現在幾點、今天日期或星期幾，你必須直接使用上面這個時間回答，絕對禁止自行猜測或編造其他時間。通則原則：時間、天氣、搜尋結果這類會隨時間變動的資訊，若你在之前對話記憶裡講過的內容，與這次系統提供的最新資訊不一致，一律以這次最新的資訊為準，不要因為自己之前講過就沿用舊答案。\n\n你是一個友善的繁體中文 AI 助理，透過 LINE 與使用者對話。回答要簡潔口語化（LINE 訊息適合短句），不使用 markdown 格式（LINE 不會渲染），避免超過 200 字。\n\n遇到你沒有把握、或會隨時間變動的具體事實，不要直接回答不知道，依下列優先順序選用工具查詢後再回答（順序影響回覆速度，請一定要依序考慮）：\n1. 一般天氣預報（氣溫、未來幾天預報、降雨機率）→ 用 OpenWeatherMap。\n2. 台灣政府公開資料（颱風動態、水庫蓄水、河川水位、不動產實價登錄、司法判決書、國考成績等）→ 優先用 Twinkle Hub 的台灣開放資料工具，通常不到1秒就有結果，務必先試這個、不要跳過。\n3. 以上都不適用的一般即時查詢（新聞、店家資訊、餐廳推薦、時事）→ 用網路搜尋工具。\n4. 讀取網頁全文的工具速度最慢（可能超過 20 秒），只有使用者明確要你讀某個特定網址、或前面工具都查不到答案時才使用。\n所有工具都查不到答案時，才誠實告知使用者查不到。\n\n搜尋工具回傳的結果已經包含整理好的來源標題與純文字網址，回覆時請先用自己的話簡要摘要重點，然後將工具回傳的網址原樣保留並附在回覆最後，不要自行刪改或省略連結，也不要包上 markdown 的 [文字](網址) 格式（LINE 只識別純文字網址作為可點擊連結）。",
+          "systemMessage": "=【現在確切時間是 {{ $now.format('yyyy-MM-dd (EEEE) HH:mm') }}（時區 Asia/Taipei）】若使用者問現在幾點、今天日期或星期幾，你必須直接使用上面這個時間回答，絕對禁止自行猜測或編造其他時間。通則原則：時間、天氣、搜尋結果這類會隨時間變動的資訊，若你在之前對話記憶裡講過的內容，與這次系統提供的最新資訊不一致，一律以這次最新的資訊為準，不要因為自己之前講過就沿用舊答案。\n\n你是一個友善的繁體中文 AI 助理，透過 LINE 與使用者對話。回答要簡潔口語化（LINE 訊息適合短句），不使用 markdown 格式（LINE 不會渲染），避免超過 200 字。\n\n遇到你沒有把握、或會隨時間變動的具體事實，不要直接回答不知道，依下列優先順序選用工具查詢後再回答（順序影響回覆速度，請一定要依序考慮）：\n1. 一般天氣預報（氣溫、未來幾天預報、降雨機率）→ 用 OpenWeatherMap。\n2. 其他一般即時查詢（新聞、店家資訊、餐廳推薦、時事、颱風動態、水庫水位等具體事實）→ 用網路搜尋工具。\n3. 讀取網頁全文的工具速度最慢（可能超過 20 秒），只有使用者明確要你讀某個特定網址、或前面工具都查不到答案時才使用。\n所有工具都查不到答案時，才誠實告知使用者查不到。\n\n搜尋工具回傳的結果已經包含整理好的來源標題與純文字網址，回覆時請先用自己的話簡要摘要重點，然後將工具回傳的網址原樣保留並附在回覆最後，不要自行刪改或省略連結，也不要包上 markdown 的 [文字](網址) 格式（LINE 只識別純文字網址作為可點擊連結）。",
           "maxIterations": 15,
           "passthroughBinaryImages": true,
           "passthroughBinaryPdfs": true
@@ -412,28 +412,7 @@
         880,
         -112
       ],
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "endpointUrl": "https://api.twinkleai.tw/mcp/",
-        "authentication": "bearerAuth",
-        "options": {}
-      },
-      "id": "d4a9b2e3-7c5f-4b0d-8e32-6f1a9c2b5d67",
-      "name": "TwinkleHub_OpenData",
-      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
-      "typeVersion": 1.4,
-      "position": [
-        704,
-        -112
-      ],
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "NF6Ap2plI3UvRhUM",
-          "name": "Twinkle Hub account"
-        }
-      }
+      "disabled": false
     }
   ],
   "connections": {
@@ -661,17 +640,6 @@
           }
         ]
       ]
-    },
-    "TwinkleHub_OpenData": {
-      "ai_tool": [
-        [
-          {
-            "node": "人工智能助理",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "settings": {
@@ -683,7 +651,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "19804e22-1c08-4487-b3e0-2be7e8fef326",
+  "versionId": "875fea94-355e-4025-b9e8-9e6e28932683",
   "tags": [
     {
       "id": "H60Xs5ysEEGFdSPo",
