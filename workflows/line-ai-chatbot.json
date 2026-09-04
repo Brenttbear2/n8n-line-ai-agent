@@ -6,16 +6,11 @@
   "nodes": [
     {
       "parameters": {
-        "events": [
-          "message"
-        ]
+        "events": ["message"]
       },
       "type": "@aotoki/n8n-nodes-line-messaging.lineMessagingTrigger",
       "typeVersion": 1,
-      "position": [
-        -736,
-        -352
-      ],
+      "position": [-736, -352],
       "id": "d89acfe8-4c6e-4b81-8b94-e290167aaad8",
       "name": "Line Messaging Trigger",
       "webhookId": "6b235417-fa59-4b17-8d5b-ef32732f4475",
@@ -39,10 +34,7 @@
       },
       "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
       "typeVersion": 1,
-      "position": [
-        1776,
-        -96
-      ],
+      "position": [1472, -80],
       "id": "0afea889-b25c-467b-9cf7-0ba8ffa6b425",
       "name": "Line Messaging",
       "credentials": {
@@ -60,10 +52,7 @@
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
-      "position": [
-        240,
-        -112
-      ],
+      "position": [256, -112],
       "id": "7ecb1def-6f5b-48cb-bd96-3f8c9f555b69",
       "name": "Simple Memory"
     },
@@ -77,10 +66,7 @@
       "name": "顯示輸入中動畫",
       "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
       "typeVersion": 1,
-      "position": [
-        128,
-        -384
-      ],
+      "position": [128, -384],
       "credentials": {
         "lineMessagingApi": {
           "id": "IpNz4Lm1dCSh5Frn",
@@ -98,10 +84,7 @@
       },
       "type": "n8n-nodes-base.openWeatherMapTool",
       "typeVersion": 1,
-      "position": [
-        384,
-        -112
-      ],
+      "position": [400, -112],
       "id": "cb840096-9b5d-495a-8164-d8872c590f3b",
       "name": "OpenWeatherMap",
       "credentials": {
@@ -110,27 +93,6 @@
           "name": "OpenWeatherMap account"
         }
       }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $('Line Messaging Trigger').first().json.message.text ?? $('圖片辨識').first().json.output }}",
-        "options": {
-          "systemMessage": "=【現在確切時間是 {{ $now.format('yyyy-MM-dd (EEEE) HH:mm') }}（時區 Asia/Taipei）】若使用者問現在幾點、今天日期或星期幾，你必須直接使用上面這個時間回答，絕對禁止自行猜測或編造其他時間。通則原則：時間、天氣、搜尋結果這類會隨時間變動的資訊，若你在之前對話記憶裡講過的內容，與這次系統提供的最新資訊不一致，一律以這次最新的資訊為準，不要因為自己之前講過就沿用舊答案。\n\n你是繁體中文 AI 助理，透過 LINE 與使用者對話。語氣直接、資訊導向：不要用「太好了」「沒問題！」「很高興為你」「哇」之類的客套開場白或情緒性驚嘆詞，不要堆疊語助詞或表情符號，有話直說、切入重點。回答要簡潔口語化（LINE 訊息適合短句），不使用 markdown 格式（LINE 不會渲染），避免超過 200 字。\n\n遇到你沒有把握、或會隨時間變動的具體事實，不要直接回答不知道，依下列優先順序選用工具查詢後再回答（順序影響回覆速度，請一定要依序考慮）：\n1. 一般天氣預報（氣溫、未來幾天預報、降雨機率）→ 用 OpenWeatherMap。\n2. 其他一般即時查詢（新聞、店家資訊、餐廳推薦、時事、颱風動態、水庫水位等具體事實）→ 用網路搜尋工具。\n3. 讀取網頁全文的工具速度最慢（可能超過 20 秒），只有使用者明確要你讀某個特定網址、或前面工具都查不到答案時才使用。\n所有工具都查不到答案時，才誠實告知使用者查不到。\n\n搜尋工具回傳的結果已經包含整理好的來源標題與純文字網址，回覆時請先用自己的話簡要摘要重點，然後將工具回傳的網址原樣保留並附在回覆最後，不要自行刪改或省略連結，也不要包上 markdown 的 [文字](網址) 格式（LINE 只識別純文字網址作為可點擊連結）。",
-          "maxIterations": 15,
-          "passthroughBinaryImages": true,
-          "passthroughBinaryPdfs": true
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        416,
-        -384
-      ],
-      "id": "18b26d31-f378-4726-8086-7c650e119e05",
-      "name": "人工智能助理",
-      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -160,56 +122,7 @@
       "name": "判斷訊息類型",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        -496,
-        -352
-      ]
-    },
-    {
-      "parameters": {
-        "description": "透過 Google 搜尋查詢即時資訊（新聞、地點、股市、任何主題都可以），回傳已經整理好的 2-3 則重點來源（標題+網址）。query 參數填搜尋關鍵字，location 參數可選填地理位置以縮小搜尋範圍（沒有地點需求就留空）。",
-        "workflowId": {
-          "__rl": true,
-          "mode": "id",
-          "value": "tIC9zsFshlP6UaoP"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "query": "={{ $fromAI('query', '要搜尋的關鍵字', 'string', '') }}",
-            "location": "={{ $fromAI('location', '搜尋地理位置，必須用英文標準地名（例如 Taiwan、Taipei, Taiwan、Tokyo, Japan），絕對不能用中文，沒有特定地點需求則留空', 'string', '') }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "query",
-              "displayName": "query",
-              "type": "string",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "location",
-              "displayName": "location",
-              "type": "string",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true
-            }
-          ]
-        }
-      },
-      "id": "93e15692-a563-47f5-9a5b-3ab055dc0e77",
-      "name": "Web_Search_With_Sources",
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2.2,
-      "position": [
-        544,
-        -112
-      ]
+      "position": [-496, -352]
     },
     {
       "parameters": {
@@ -220,10 +133,7 @@
       "name": "取得圖片內容",
       "type": "@aotoki/n8n-nodes-line-messaging.lineMessagingData",
       "typeVersion": 1,
-      "position": [
-        -176,
-        -608
-      ],
+      "position": [-176, -608],
       "credentials": {
         "lineMessagingApi": {
           "id": "IpNz4Lm1dCSh5Frn",
@@ -233,21 +143,18 @@
     },
     {
       "parameters": {
-        "model": "minimax/minimax-m3",
+        "model": "openai/gpt-5.6-luna-pro",
         "options": {
           "frequencyPenalty": 0.4,
           "presencePenalty": 0.3,
           "temperature": 0.1,
-          "timeout": 25000,
-          "topP": 1
+          "timeout": 60000,
+          "topP": 0.8
         }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
-      "position": [
-        112,
-        -112
-      ],
+      "position": [112, -112],
       "id": "f38ece4d-b5fe-4d40-9e7c-45536fc300db",
       "name": "OpenRouter Chat Model",
       "credentials": {
@@ -271,10 +178,7 @@
       "name": "圖片辨識",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
-      "position": [
-        432,
-        -608
-      ]
+      "position": [432, -608]
     },
     {
       "parameters": {
@@ -304,10 +208,7 @@
       "name": "判斷是否重置指令",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        -176,
-        192
-      ]
+      "position": [-176, 192]
     },
     {
       "parameters": {
@@ -318,10 +219,7 @@
       "name": "清除記憶",
       "type": "@n8n/n8n-nodes-langchain.memoryManager",
       "typeVersion": 1.1,
-      "position": [
-        464,
-        176
-      ]
+      "position": [464, 176]
     },
     {
       "parameters": {
@@ -333,10 +231,7 @@
       "name": "重置確認訊息",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        1184,
-        -96
-      ]
+      "position": [1200, 176]
     },
     {
       "parameters": {
@@ -346,10 +241,7 @@
       "name": "回覆內容防護",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        896,
-        -384
-      ]
+      "position": [896, -384]
     },
     {
       "parameters": {
@@ -380,10 +272,7 @@
       "name": "是否需要重試",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        1184,
-        -384
-      ]
+      "position": [1184, -384]
     },
     {
       "parameters": {
@@ -393,252 +282,175 @@
       "name": "重試前等待",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [
-        1472,
-        -400
-      ],
+      "position": [1472, -400],
       "webhookId": "23438e3e-9fd6-4183-9eec-a765bb4515bf"
     },
     {
       "parameters": {
         "endpointUrl": "https://mcp.firecrawl.dev/v2/mcp",
+        "include": "selected",
+        "includeTools": ["firecrawl_scrape"],
         "options": {}
       },
       "id": "c3f8a1d2-6b4e-4a9c-9f21-7d5e8b0a1c44",
       "name": "Firecrawl_Read_Page",
       "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
       "typeVersion": 1.4,
-      "position": [
-        736,
-        -96
-      ]
+      "position": [704, -112]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Line Messaging Trigger').first().json.message.text ?? $('圖片辨識').first().json.output }}",
+        "options": {
+          "systemMessage": "=【現在確切時間是 {{ $now.format('yyyy-MM-dd (EEEE) HH:mm') }}（時區 Asia/Taipei）】若使用者問現在幾點、今天日期或星期幾，你必須直接使用上面這個時間回答，絕對禁止自行猜測或編造其他時間。通則原則：時間、天氣、搜尋結果這類會隨時間變動的資訊，若你在之前對話記憶裡講過的內容，與這次系統提供的最新資訊不一致，一律以這次最新的資訊為準，不要因為自己之前講過就沿用舊答案。\n\n你是繁體中文 AI 助理，透過 LINE 與使用者對話。語氣直接、資訊導向：不要用「太好了」「沒問題！」「很高興為你」「哇」之類的客套開場白或情緒性驚嘆詞，不要堆疊語助詞或表情符號，有話直說、切入重點。回答要簡潔口語化（LINE 訊息適合短句），不使用 markdown 格式（LINE 不會渲染），避免超過 200 字。\n\n遇到你沒有把握、或會隨時間變動的具體事實，不要直接回答不知道，依下列優先順序選用工具查詢後再回答（順序影響回覆速度，請一定要依序考慮）：\n1. 一般天氣預報（氣溫、未來幾天預報、降雨機率）→ 用 OpenWeatherMap。\n2. 其他一般即時查詢（新聞、店家資訊、餐廳推薦、時事、颱風動態、水庫水位等具體事實）→ 用網路搜尋工具。\n3. 讀取網頁全文的工具速度最慢（可能超過 20 秒），只有使用者明確要你讀某個特定網址、或前面工具都查不到答案時才使用。\n所有工具都查不到答案時，才誠實告知使用者查不到。\n\n搜尋工具回傳的結果已經包含整理好的來源標題與純文字網址，回覆時請先用自己的話簡要摘要重點，然後將工具回傳的網址原樣保留並附在回覆最後，不要自行刪改或省略連結，也不要包上 markdown 的 [文字](網址) 格式（LINE 只識別純文字網址作為可點擊連結）。",
+          "maxIterations": 15,
+          "passthroughBinaryImages": true,
+          "passthroughBinaryPdfs": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [416, -384],
+      "id": "18b26d31-f378-4726-8086-7c650e119e05",
+      "name": "AI Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "description": "查詢機票／航班價格與班次(僅限機票查詢,不適用天氣、新聞或一般網頁搜尋)。origin/destination填出發地與目的地(城市名或機場代碼皆可),departDate填出發日期(YYYY-MM-DD,必填),returnDate填回程日期(YYYY-MM-DD,單程留空),adults填成人人數(選填,預設1),cabinClass填艙等如economy/business(選填,預設economy)。回傳精選航班與大約票價、訂票連結。",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "8yVcjzR7pCfDqybi"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "origin": "={{ $fromAI('origin', '出發地城市名稱或機場代碼', 'string') }}",
+            "destination": "={{ $fromAI('destination', '目的地城市名稱或機場代碼', 'string') }}",
+            "departDate": "={{ $fromAI('departDate', '出發日期,格式YYYY-MM-DD', 'string') }}",
+            "returnDate": "={{ $fromAI('returnDate', '回程日期,格式YYYY-MM-DD,單程查詢則留空', 'string', '') }}",
+            "adults": "={{ $fromAI('adults', '成人乘客人數,預設1', 'string', '1') }}",
+            "cabinClass": "={{ $fromAI('cabinClass', '艙等,例如economy、business,預設economy', 'string', 'economy') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "origin", "displayName": "origin", "type": "string", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true },
+            { "id": "destination", "displayName": "destination", "type": "string", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true },
+            { "id": "departDate", "displayName": "departDate", "type": "string", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true },
+            { "id": "returnDate", "displayName": "returnDate", "type": "string", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true },
+            { "id": "adults", "displayName": "adults", "type": "string", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true },
+            { "id": "cabinClass", "displayName": "cabinClass", "type": "string", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true }
+          ]
+        }
+      },
+      "id": "4400839f-57b3-4411-a99b-4f28be3b78f7",
+      "name": "kiwi 機票資訊查找",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [864, -112]
+    },
+    {
+      "parameters": {
+        "description": "透過 Google 搜尋查詢即時資訊（新聞、地點、店家、時事等一般主題），回傳已經整理好的 2-3 則重點來源（標題+網址）。query 參數填搜尋關鍵字，location 參數可選填地理位置以縮小搜尋範圍（沒有地點需求就留空）。注意：機票／航班價格查詢一律不要使用這個工具，請改用專門的機票搜尋工具。",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "tIC9zsFshlP6UaoP"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $fromAI('query', '要搜尋的關鍵字', 'string', '') }}",
+            "location": "={{ $fromAI('location', '搜尋地理位置，必須用英文標準地名（例如 Taiwan、Taipei, Taiwan、Tokyo, Japan），絕對不能用中文，沒有特定地點需求則留空', 'string', '') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "query", "displayName": "query", "type": "string", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true },
+            { "id": "location", "displayName": "location", "type": "string", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true }
+          ]
+        }
+      },
+      "id": "93e15692-a563-47f5-9a5b-3ab055dc0e77",
+      "name": "網頁資訊查找",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [544, -112]
     }
   ],
   "connections": {
     "Simple Memory": {
-      "ai_memory": [
-        [
-          {
-            "node": "人工智能助理",
-            "type": "ai_memory",
-            "index": 0
-          },
-          {
-            "node": "清除記憶",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
+      "ai_memory": [[
+        { "node": "AI Agent", "type": "ai_memory", "index": 0 },
+        { "node": "清除記憶", "type": "ai_memory", "index": 0 }
+      ]]
     },
     "顯示輸入中動畫": {
-      "main": [
-        [
-          {
-            "node": "人工智能助理",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]]
     },
     "OpenWeatherMap": {
-      "ai_tool": [
-        [
-          {
-            "node": "人工智能助理",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
     },
     "判斷訊息類型": {
       "main": [
-        [
-          {
-            "node": "取得圖片內容",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "判斷是否重置指令",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "取得圖片內容", "type": "main", "index": 0 }],
+        [{ "node": "判斷是否重置指令", "type": "main", "index": 0 }]
       ]
     },
     "Line Messaging Trigger": {
-      "main": [
-        [
-          {
-            "node": "判斷訊息類型",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Web_Search_With_Sources": {
-      "ai_tool": [
-        [
-          {
-            "node": "人工智能助理",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "判斷訊息類型", "type": "main", "index": 0 }]]
     },
     "取得圖片內容": {
-      "main": [
-        [
-          {
-            "node": "圖片辨識",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "圖片辨識", "type": "main", "index": 0 }]]
     },
     "OpenRouter Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "圖片辨識",
-            "type": "ai_languageModel",
-            "index": 0
-          },
-          {
-            "node": "人工智能助理",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
+      "ai_languageModel": [[
+        { "node": "圖片辨識", "type": "ai_languageModel", "index": 0 },
+        { "node": "AI Agent", "type": "ai_languageModel", "index": 0 }
+      ]]
     },
     "圖片辨識": {
-      "main": [
-        [
-          {
-            "node": "顯示輸入中動畫",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "顯示輸入中動畫", "type": "main", "index": 0 }]]
     },
     "判斷是否重置指令": {
       "main": [
-        [
-          {
-            "node": "清除記憶",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "顯示輸入中動畫",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "清除記憶", "type": "main", "index": 0 }],
+        [{ "node": "顯示輸入中動畫", "type": "main", "index": 0 }]
       ]
     },
     "清除記憶": {
-      "main": [
-        [
-          {
-            "node": "重置確認訊息",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "重置確認訊息", "type": "main", "index": 0 }]]
     },
     "重置確認訊息": {
-      "main": [
-        [
-          {
-            "node": "Line Messaging",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "人工智能助理": {
-      "main": [
-        [
-          {
-            "node": "回覆內容防護",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "回覆內容防護",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Line Messaging", "type": "main", "index": 0 }]]
     },
     "回覆內容防護": {
-      "main": [
-        [
-          {
-            "node": "是否需要重試",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "是否需要重試", "type": "main", "index": 0 }]]
     },
     "是否需要重試": {
       "main": [
-        [
-          {
-            "node": "重試前等待",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Line Messaging",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "重試前等待", "type": "main", "index": 0 }],
+        [{ "node": "Line Messaging", "type": "main", "index": 0 }]
       ]
     },
     "重試前等待": {
-      "main": [
-        [
-          {
-            "node": "人工智能助理",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]]
     },
     "Firecrawl_Read_Page": {
-      "ai_tool": [
-        [
-          {
-            "node": "人工智能助理",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "AI Agent": {
+      "main": [
+        [{ "node": "回覆內容防護", "type": "main", "index": 0 }],
+        [{ "node": "回覆內容防護", "type": "main", "index": 0 }]
       ]
+    },
+    "kiwi 機票資訊查找": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "網頁資訊查找": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
     }
   },
   "settings": {
@@ -650,7 +462,6 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "2218672c-f7dd-426a-a701-95343eda05dd",
   "tags": [
     {
       "id": "H60Xs5ysEEGFdSPo",

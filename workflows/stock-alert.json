@@ -1,0 +1,415 @@
+{
+  "id": "FhqnWgbZCkyu0q4r",
+  "name": "股市速報 - 台股警報+美股新聞",
+  "description": null,
+  "active": true,
+  "createdAt": "2026-08-30T13:32:23.245Z",
+  "updatedAt": "2026-09-02T17:44:12.176Z",
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 9-13 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "b1b2c3d4-0001-4b1b-9b11-000000000011",
+      "name": "B-盤中檢查每10分鐘",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [-816, 192]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = $now.setZone('Asia/Taipei');\nconst hm = now.hour * 100 + now.minute;\nif (hm > 1330) { return []; }\nreturn $input.all();"
+      },
+      "id": "b1b2c3d4-0002-4b1b-9b11-000000000012",
+      "name": "B-時間窗檢查",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-576, 192]
+    },
+    {
+      "parameters": {
+        "url": "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_t00.tw|otc_o00.tw&json=1&delay=0",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "b1b2c3d4-0006-4b1b-9b11-000000000016",
+      "name": "B-查詢即時報價",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [-336, 192]
+    },
+    {
+      "parameters": {
+        "jsCode": "const twseUrl = 'https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_t00.tw|otc_o00.tw&json=1&delay=0';\nfunction sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }\n\nlet quoteResp = $('B-查詢即時報價').first().json;\nlet msgArray = quoteResp.msgArray || [];\n\nlet retries = 0;\nwhile (msgArray.length === 0 && retries < 2) {\n  await sleep(2000);\n  try {\n    quoteResp = await this.helpers.httpRequest({ url: twseUrl, json: true });\n  } catch (e) {\n    quoteResp = {};\n  }\n  msgArray = quoteResp.msgArray || [];\n  retries++;\n}\n\nif (msgArray.length === 0) {\n  throw new Error('台股即時報價API連續回傳空資料，已重試' + retries + '次仍失敗，本次跳過推播');\n}\n\nconst now = $now.setZone('Asia/Taipei').toFormat('HH:mm');\nconst lines = [];\nfor (const s of msgArray) {\n  const z = parseFloat(s.z || s.pz || s.b || '0');\n  const y = parseFloat(s.y || '0');\n  if (!y || !z) continue;\n  const diff = z - y;\n  const pct = (diff / y) * 100;\n  const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';\n  lines.push(`${s.n} ${z.toFixed(2)} ${arrow}${Math.abs(diff).toFixed(2)} (${pct > 0 ? '+' : ''}${pct.toFixed(2)}%)`);\n}\n\nif (lines.length === 0) {\n  throw new Error('台股即時報價API有回應但無有效指數資料');\n}\n\nconst message = `📊 大盤指數速報 ${now}\\n\\n${lines.join('\\n')}`;\nreturn [{ json: { message } }];"
+      },
+      "id": "b1b2c3d4-0007-4b1b-9b11-000000000017",
+      "name": "B-計算漲跌幅並篩選新警報",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-48, 192]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "to": "YOUR_LINE_USER_ID",
+        "messages": {
+          "values": [
+            {
+              "text": "={{ $json.message }}"
+            }
+          ]
+        }
+      },
+      "id": "b1b2c3d4-0009-4b1b-9b11-000000000019",
+      "name": "B-發送盤中警報",
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [192, 192],
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "IpNz4Lm1dCSh5Frn",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+        "options": {}
+      },
+      "id": "c1b2c3d4-0002-4c1c-9c11-000000000022",
+      "name": "C-CNBC財經新聞",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [-560, 800]
+    },
+    {
+      "parameters": {
+        "url": "https://www.marketwatch.com/rss/topstories",
+        "options": {}
+      },
+      "id": "c1b2c3d4-0003-4c1c-9c11-000000000023",
+      "name": "C-MarketWatch頭條",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [-560, 944]
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "id": "c1b2c3d4-0006-4c1c-9c11-000000000026",
+      "name": "C-OpenRouter模型",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [144, 1008],
+      "credentials": {
+        "openRouterApi": {
+          "id": "aa5tnqyliRGqJqCu",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "c2b2c3d4-0001-4c2c-9c22-000000000031",
+      "name": "C-台股盤前新聞時間",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [-800, 672]
+    },
+    {
+      "parameters": {
+        "url": "https://news.ltn.com.tw/rss/business.xml",
+        "options": {}
+      },
+      "id": "c2b2c3d4-0002-4c2c-9c22-000000000032",
+      "name": "C-自由時報財經",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [-560, 448]
+    },
+    {
+      "parameters": {
+        "url": "https://money.udn.com/rssfeed/news/1001/5590?ch=money",
+        "options": {}
+      },
+      "id": "c2b2c3d4-0003-4c2c-9c22-000000000033",
+      "name": "C-UDN經濟日報",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [-560, 592]
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "id": "c2b2c3d4-0004-4c2c-9c22-000000000034",
+      "name": "C-合併台股新聞來源",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [-320, 672]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(i => i.json);\nitems.sort((a, b) => new Date(b.pubDate || b.isoDate || 0) - new Date(a.pubDate || a.isoDate || 0));\nconst top = items.slice(0, 20);\nconst listText = top.map((n, i) => `${i + 1}. ${n.title}`).join('\\n');\nconst links = top.map(n => ({ title: n.title, link: n.link }));\nreturn [{ json: { newsList: listText, links } }];"
+      },
+      "id": "c2b2c3d4-0005-4c2c-9c22-000000000035",
+      "name": "C-整理台股最新15則",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-112, 704]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是財經新聞編輯，以下是台股與美股相關財經新聞標題（依時間新舊混合排列，需自行判斷是台股還是美股相關），請整理成繁體中文重點摘要，分成「台股」與「美股」兩個段落，每段條列2~4點最重要的市場動態，語氣精簡專業：\n\n{{ $json.newsList }}",
+        "batching": {}
+      },
+      "id": "c2b2c3d4-0006-4c2c-9c22-000000000036",
+      "name": "C-AI生成台股摘要",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [192, 832]
+    },
+    {
+      "parameters": {
+        "jsCode": "const summary = $json.text;\nconst links = $('C-整理台股最新15則').first().json.links.slice(0, 5);\nconst linksText = links.map((l, i) => `${i + 1}. ${l.link}`).join('\\n');\nreturn [{ json: { finalMessage: `📊 台股+美股財經速報\\n\\n${summary}\\n\\n🔗 原文連結:\\n${linksText}` } }];"
+      },
+      "id": "c2b2c3d4-0007-4c2c-9c22-000000000037",
+      "name": "C-組合台股訊息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [576, 704]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "to": "YOUR_LINE_USER_ID",
+        "messages": {
+          "values": [
+            {
+              "text": "={{ $json.finalMessage }}"
+            }
+          ]
+        }
+      },
+      "id": "c2b2c3d4-0008-4c2c-9c22-000000000038",
+      "name": "C-發送台股新聞",
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [752, 704],
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "IpNz4Lm1dCSh5Frn",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [1, 2, 3, 4, 5],
+              "triggerAtHour": 15
+            }
+          ]
+        }
+      },
+      "id": "d1b2c3d4-0001-4d1d-9d11-000000000041",
+      "name": "D-收盤成交量排行時間",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [-816, 1120]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX20?date={{ $now.setZone('Asia/Taipei').toFormat('yyyyLLdd') }}&response=json",
+        "options": {}
+      },
+      "id": "d1b2c3d4-0002-4d1d-9d11-000000000042",
+      "name": "D-取得今日成交量排行",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [-560, 1120]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nif (resp.stat !== 'OK' || !resp.data || !resp.data.length) {\n  return [{ json: { message: `⚠️ 今日無成交量排行資料（可能非交易日）` } }];\n}\nconst rows = resp.data.slice(0, 20);\nconst lines = rows.map(r => {\n  const rank = r[0], code = r[1], name = r[2], volumeRaw = r[3];\n  const shares = parseInt(String(volumeRaw).replace(/,/g, ''), 10);\n  const lots = Math.round(shares / 1000);\n  return `${rank}. ${name}(${code}) 量:${lots.toLocaleString()}張`;\n});\nconst message = `📊 今日成交量排行前20名（${resp.date}）\\n\\n${lines.join('\\n')}`;\nreturn [{ json: { message } }];"
+      },
+      "id": "d1b2c3d4-0003-4d1d-9d11-000000000043",
+      "name": "D-整理成交量排行前20",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-320, 1120]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "to": "YOUR_LINE_USER_ID",
+        "messages": {
+          "values": [
+            {
+              "text": "={{ $json.message }}"
+            }
+          ]
+        }
+      },
+      "id": "d1b2c3d4-0004-4d1d-9d11-000000000044",
+      "name": "D-發送成交量排行",
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [-80, 1120],
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "IpNz4Lm1dCSh5Frn",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 16-22 3,6,9,12 1"
+            }
+          ]
+        }
+      },
+      "id": "e1b2c3d4-0001-4e1e-9e11-000000000051",
+      "name": "E-0050換股提醒時間",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [-816, 1328]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "to": "YOUR_LINE_USER_ID",
+        "messages": {
+          "values": [
+            {
+              "text": "📢 0050季度換股提醒\n\n台灣50指數今日為季度審核生效日，0050成分股可能已調整。\n請確認最新成分股名單，並更新追蹤清單（Data Table: stock_watchlist_tw50_fixed）。"
+            }
+          ]
+        }
+      },
+      "id": "e1b2c3d4-0002-4e1e-9e11-000000000052",
+      "name": "E-發送換股提醒",
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [-560, 1328],
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "IpNz4Lm1dCSh5Frn",
+          "name": "Line Messaging account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "B-盤中檢查每10分鐘": {
+      "main": [[{ "node": "B-時間窗檢查", "type": "main", "index": 0 }]]
+    },
+    "B-查詢即時報價": {
+      "main": [[{ "node": "B-計算漲跌幅並篩選新警報", "type": "main", "index": 0 }]]
+    },
+    "C-CNBC財經新聞": {
+      "main": [[{ "node": "C-合併台股新聞來源", "type": "main", "index": 2 }]]
+    },
+    "C-MarketWatch頭條": {
+      "main": [[{ "node": "C-合併台股新聞來源", "type": "main", "index": 3 }]]
+    },
+    "C-OpenRouter模型": {
+      "ai_languageModel": [[{ "node": "C-AI生成台股摘要", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "C-台股盤前新聞時間": {
+      "main": [[
+        { "node": "C-自由時報財經", "type": "main", "index": 0 },
+        { "node": "C-UDN經濟日報", "type": "main", "index": 0 },
+        { "node": "C-CNBC財經新聞", "type": "main", "index": 0 },
+        { "node": "C-MarketWatch頭條", "type": "main", "index": 0 }
+      ]]
+    },
+    "C-自由時報財經": {
+      "main": [[{ "node": "C-合併台股新聞來源", "type": "main", "index": 0 }]]
+    },
+    "C-UDN經濟日報": {
+      "main": [[{ "node": "C-合併台股新聞來源", "type": "main", "index": 1 }]]
+    },
+    "C-合併台股新聞來源": {
+      "main": [[{ "node": "C-整理台股最新15則", "type": "main", "index": 0 }]]
+    },
+    "C-整理台股最新15則": {
+      "main": [[{ "node": "C-AI生成台股摘要", "type": "main", "index": 0 }]]
+    },
+    "C-AI生成台股摘要": {
+      "main": [[{ "node": "C-組合台股訊息", "type": "main", "index": 0 }]]
+    },
+    "C-組合台股訊息": {
+      "main": [[{ "node": "C-發送台股新聞", "type": "main", "index": 0 }]]
+    },
+    "D-收盤成交量排行時間": {
+      "main": [[{ "node": "D-取得今日成交量排行", "type": "main", "index": 0 }]]
+    },
+    "D-取得今日成交量排行": {
+      "main": [[{ "node": "D-整理成交量排行前20", "type": "main", "index": 0 }]]
+    },
+    "D-整理成交量排行前20": {
+      "main": [[{ "node": "D-發送成交量排行", "type": "main", "index": 0 }]]
+    },
+    "E-0050換股提醒時間": {
+      "main": [[{ "node": "E-發送換股提醒", "type": "main", "index": 0 }]]
+    },
+    "B-計算漲跌幅並篩選新警報": {
+      "main": [[{ "node": "B-發送盤中警報", "type": "main", "index": 0 }]]
+    },
+    "B-時間窗檢查": {
+      "main": [[{ "node": "B-查詢即時報價", "type": "main", "index": 0 }]]
+    }
+  },
+  "nodeGroups": [
+    {
+      "id": "e62e7642-c063-4952-99a8-39c47ee2ccf7",
+      "name": "AI新聞摘要",
+      "nodeIds": ["c1b2c3d4-0006-4c1c-9c11-000000000026", "c2b2c3d4-0006-4c2c-9c22-000000000036"]
+    }
+  ],
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "binaryMode": "separate",
+    "timezone": "Asia/Taipei"
+  },
+  "pinData": {},
+  "tags": []
+}
