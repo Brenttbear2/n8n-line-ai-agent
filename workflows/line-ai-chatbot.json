@@ -233,11 +233,11 @@
     },
     {
       "parameters": {
-        "model": "google/gemini-3.5-flash-lite",
+        "model": "openai/gpt-5.6-luna",
         "options": {
           "frequencyPenalty": 0.4,
           "presencePenalty": 0.3,
-          "temperature": 0.2,
+          "temperature": 0.1,
           "timeout": 25000,
           "topP": 1
         }
@@ -398,6 +398,46 @@
         -304
       ],
       "webhookId": "23438e3e-9fd6-4183-9eec-a765bb4515bf"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.firecrawl.dev/v2/mcp",
+        "serverTransport": "httpStreamable",
+        "authentication": "none",
+        "include": "all",
+        "options": {}
+      },
+      "id": "c3f8a1d2-6b4e-4a9c-9f21-7d5e8b0a1c44",
+      "name": "Firecrawl_Read_Page",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [
+        864,
+        -208
+      ]
+    },
+    {
+      "id": "d4a9b2e3-7c5f-4b0d-8e32-6f1a9c2b5d67",
+      "name": "TwinkleHub_OpenData",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [
+        860,
+        16
+      ],
+      "parameters": {
+        "endpointUrl": "https://api.twinkleai.tw/mcp/",
+        "serverTransport": "httpStreamable",
+        "authentication": "bearerAuth",
+        "include": "all",
+        "options": {}
+      },
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "NF6Ap2plI3UvRhUM",
+          "name": "Twinkle Hub account"
+        }
+      }
     }
   ],
   "connections": {
@@ -614,6 +654,28 @@
           }
         ]
       ]
+    },
+    "Firecrawl_Read_Page": {
+      "ai_tool": [
+        [
+          {
+            "node": "人工智能助理",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TwinkleHub_OpenData": {
+      "ai_tool": [
+        [
+          {
+            "node": "人工智能助理",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -625,7 +687,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "dffd1bf9-774e-4f4f-b9b9-d5ee16f70d3b",
+  "versionId": "29198925-c1e7-4f62-abfd-1d753704e2a3",
   "tags": [
     {
       "id": "H60Xs5ysEEGFdSPo",
