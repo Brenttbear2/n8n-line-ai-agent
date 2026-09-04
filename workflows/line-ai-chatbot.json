@@ -233,7 +233,7 @@
     },
     {
       "parameters": {
-        "model": "openai/gpt-5.6-luna",
+        "model": "minimax/minimax-m3",
         "options": {
           "frequencyPenalty": 0.4,
           "presencePenalty": 0.3,
