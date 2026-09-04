@@ -1,0 +1,19 @@
+# 環境變數 / 金鑰 / 憑證檔案 — 絕不進版本控制
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*secret*
+id_rsa
+id_rsa.*
+
+# n8n 本機資料（若曾複製到本資料夾）
+.n8n/
+n8n_data/
+
+# 系統/編輯器雜項
+.DS_Store
+Thumbs.db

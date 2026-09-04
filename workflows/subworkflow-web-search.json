@@ -1,0 +1,123 @@
+{
+  "id": "tIC9zsFshlP6UaoP",
+  "name": "Line AI chatbot 測試-Subworkflow",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            },
+            {
+              "name": "location"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000001",
+      "name": "搜尋工具入口",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "q": "={{ $json.query }}",
+        "location": "={{ $json.location }}",
+        "additionalFields": {},
+        "requestOptions": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000002",
+      "name": "SerpAPI原始查詢",
+      "type": "n8n-nodes-serpapi.serpApiTool",
+      "typeVersion": 1,
+      "position": [
+        160,
+        224
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "1J2P4lpvk7tHjNB0",
+          "name": "SerpAPI account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\n\nfunction buildMapsLink(title, address) {\n  const q = encodeURIComponent([title, address].filter(Boolean).join(' '));\n  return `https://www.google.com/maps/search/?api=1&query=${q}`;\n}\n\nlet items = [];\n\nif (Array.isArray(raw.organic_results) && raw.organic_results.length > 0) {\n  items = raw.organic_results.slice(0, 3).map(r => ({\n    title: r.title || '',\n    link: r.link || ''\n  })).filter(r => r.link);\n}\n\nif (items.length === 0 && raw.local_results) {\n  const places = Array.isArray(raw.local_results) ? raw.local_results : (raw.local_results.places || []);\n  items = places.slice(0, 3).map(p => ({\n    title: p.title || '',\n    link: p.website || p.link || buildMapsLink(p.title, p.address)\n  }));\n}\n\nif (items.length === 0 && Array.isArray(raw.news_results)) {\n  items = raw.news_results.slice(0, 3).map(n => ({\n    title: n.title || '',\n    link: n.link || ''\n  })).filter(r => r.link);\n}\n\nconst output = items.length > 0\n  ? items.map((it, i) => `${i + 1}. ${it.title}\\n${it.link}`).join('\\n')\n  : '搜尋沒有找到相關結果的來源連結。';\n\nreturn [{ json: { output, resultCount: items.length } }];"
+      },
+      "id": "a1000000-0000-0000-0000-000000000003",
+      "name": "整理搜尋結果與連結",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Subworkflow: 搜尋並整理連結\n\n**輸入**：\n- query (string, 必填) - 搜尋關鍵字\n- location (string, 選填) - 地理位置，縮小搜尋範圍\n\n**輸出**：\n- output (string) - 整理好的 2-3 則重點來源（標題+網址），純文字格式\n- resultCount (number) - 找到幾則結果\n\n被 Line AI chatbot 測試 的 Agent 當作 Tool Workflow 使用。獨立於主 workflow，避免自我呼叫造成額外風險。",
+        "height": 368,
+        "width": 736
+      },
+      "id": "a1000000-0000-0000-0000-000000000004",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        16
+      ]
+    }
+  ],
+  "connections": {
+    "搜尋工具入口": {
+      "main": [
+        [
+          {
+            "node": "SerpAPI原始查詢",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI原始查詢": {
+      "main": [
+        [
+          {
+            "node": "整理搜尋結果與連結",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "890393b4-ad0f-4197-b0c1-e4c9080f2976",
+  "tags": [
+    {
+      "id": "H60Xs5ysEEGFdSPo",
+      "name": "chatbot"
+    }
+  ]
+}

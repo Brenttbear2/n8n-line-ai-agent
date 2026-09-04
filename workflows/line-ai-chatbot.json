@@ -1,0 +1,635 @@
+{
+  "id": "WgaQ1hufHck5k4MJ",
+  "name": "Line AI chatbot 測試",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "message"
+        ]
+      },
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessagingTrigger",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -352
+      ],
+      "id": "d89acfe8-4c6e-4b81-8b94-e290167aaad8",
+      "name": "Line Messaging Trigger",
+      "webhookId": "6b235417-fa59-4b17-8d5b-ef32732f4475",
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "IpNz4Lm1dCSh5Frn",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "replyToken": "={{ $('Line Messaging Trigger').first().json.replyToken }}",
+        "messages": {
+          "values": [
+            {
+              "text": "={{ $json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        -96
+      ],
+      "id": "0afea889-b25c-467b-9cf7-0ba8ffa6b425",
+      "name": "Line Messaging",
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "IpNz4Lm1dCSh5Frn",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Line Messaging Trigger').item.json.source.userId }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        -80
+      ],
+      "id": "7ecb1def-6f5b-48cb-bd96-3f8c9f555b69",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "showLoadingAnimation",
+        "chatId": "={{ $('Line Messaging Trigger').first().json.source.userId }}",
+        "loadingSeconds": 30
+      },
+      "id": "e7c1a2b3-4d5e-4f6a-8b9c-0d1e2f3a4b5c",
+      "name": "顯示輸入中動畫",
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -384
+      ],
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "IpNz4Lm1dCSh5Frn",
+          "name": "Line Messaging account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "locationSelection": "coordinates",
+        "latitude": "={{ $fromAI('Latitude', '該查詢地點的緯度，十進位度數格式（例如台北市約 25.03，板橋區約 25.01），請根據地名自行估算', 'string') }}",
+        "longitude": "={{ $fromAI('Longitude', '該查詢地點的經度，十進位度數格式（例如台北市約 121.56，板橋區約 121.46），請根據地名自行估算', 'string') }}",
+        "language": "zh_tw"
+      },
+      "type": "n8n-nodes-base.openWeatherMapTool",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -80
+      ],
+      "id": "cb840096-9b5d-495a-8164-d8872c590f3b",
+      "name": "OpenWeatherMap",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "v8Rafcx2b0cS0RD4",
+          "name": "OpenWeatherMap account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Line Messaging Trigger').first().json.message.text ?? $('圖片辨識').first().json.output }}",
+        "options": {
+          "systemMessage": "=【現在確切時間是 {{ $now.format('yyyy-MM-dd (EEEE) HH:mm') }}（時區 Asia/Taipei）】若使用者問現在幾點、今天日期或星期幾，你必須直接使用上面這個時間回答，絕對禁止自行猜測或編造其他時間。通則原則：時間、天氣、搜尋結果這類會隨時間變動的資訊，若你在之前對話記憶裡講過的內容，與這次系統提供的最新資訊不一致，一律以這次最新的資訊為準，不要因為自己之前講過就沿用舊答案。\n\n你是一個友善的繁體中文 AI 助理，透過 LINE 與使用者對話。\n回答要簡潔口語化（LINE 訊息適合短句），不使用 markdown 格式（LINE 不會渲染），避免超過 200 字。遇到即時性、地點性或你沒有把握的具體事實（例如餐廳推薦、店家資訊、時事、天氣以外的查詢），主動使用搜尋工具查詢後再回答，不要直接回答不知道。只有在搜尋後仍然找不到答案時，才誠實告知使用者。搜尋工具回傳的結果已經包含整理好的來源標題與純文字網址，回覆時請先用自己的話簡要摘要重點，然後將工具回傳的網址原樣保留並附在回覆最後，不要自行刪改或省略連結，也不要包上 markdown 的 [文字](網址) 格式（LINE 只識別純文字網址作為可點擊連結）。",
+          "maxIterations": 15,
+          "passthroughBinaryImages": true,
+          "passthroughBinaryPdfs": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        -384
+      ],
+      "id": "18b26d31-f378-4726-8086-7c650e119e05",
+      "name": "人工智能助理",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a1b2c3d4-0001-0001-0001-000000000001",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.message.type }}",
+              "rightValue": "image"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e8669cc0-d5f7-47ea-aa10-860e0f5f3b48",
+      "name": "判斷訊息類型",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -496,
+        -352
+      ]
+    },
+    {
+      "parameters": {
+        "description": "透過 Google 搜尋查詢即時資訊（新聞、地點、股市、任何主題都可以），回傳已經整理好的 2-3 則重點來源（標題+網址）。query 參數填搜尋關鍵字，location 參數可選填地理位置以縮小搜尋範圍（沒有地點需求就留空）。",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "tIC9zsFshlP6UaoP"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $fromAI('query', '要搜尋的關鍵字', 'string', '') }}",
+            "location": "={{ $fromAI('location', '搜尋地理位置，必須用英文標準地名（例如 Taiwan、Taipei, Taiwan、Tokyo, Japan），絕對不能用中文，沒有特定地點需求則留空', 'string', '') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            }
+          ]
+        }
+      },
+      "id": "93e15692-a563-47f5-9a5b-3ab055dc0e77",
+      "name": "Web_Search_With_Sources",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "messageId": "={{ $json.message.id }}",
+        "additionalOptions": {}
+      },
+      "id": "54f708a3-29ae-40ff-a6ea-96d024fb3287",
+      "name": "取得圖片內容",
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessagingData",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -608
+      ],
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "IpNz4Lm1dCSh5Frn",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3.5-flash-lite",
+        "options": {
+          "frequencyPenalty": 0.4,
+          "presencePenalty": 0.3,
+          "temperature": 0.2,
+          "timeout": 25000,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        144,
+        -112
+      ],
+      "id": "f38ece4d-b5fe-4d40-9e7c-45536fc300db",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "aa5tnqyliRGqJqCu",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "請詳細描述這張圖片的內容，如果圖片中有文字，請完整列出文字內容。",
+        "options": {
+          "systemMessage": "你是圖片描述助理，只需要客觀描述圖片內容或列出圖片中的文字，不需要對話語氣、不需要客套。",
+          "passthroughBinaryImages": true,
+          "passthroughBinaryPdfs": true
+        }
+      },
+      "id": "264b760c-4a4a-4291-8366-b56209695e78",
+      "name": "圖片辨識",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        432,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b1c2d3e4-0001-0001-0001-000000000001",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.message.text.trim() }}",
+              "rightValue": "重新開始"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "83de2fe7-1cbb-4179-af4d-87cda5448d4c",
+      "name": "判斷是否重置指令",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "delete",
+        "deleteMode": "all"
+      },
+      "id": "b18f5f52-d4a2-42f7-93dc-8301a1d1f53e",
+      "name": "清除記憶",
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"output\": \"好的，已經幫你清空之前的對話記錄了，我們重新開始吧！\"\n}",
+        "options": {}
+      },
+      "id": "a8605b7d-46c1-47f3-9247-907df5d31524",
+      "name": "重置確認訊息",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = ($json.output ?? '').toString();\n\nconst looksLeaked = /^(Calling|Invoking|Using|Executing)\\s+\\S+.*(with input|tool)/i.test(raw.trim())\n  || /\"(query|location|latitude|longitude)\"\\s*:/i.test(raw);\nconst isEmpty = raw.trim() === '';\nconst isBad = looksLeaked || isEmpty;\n\nif (isBad && $runIndex === 0) {\n  return [{ json: { shouldRetry: true } }];\n}\n\nlet text;\nif (isBad) {\n  text = '不好意思，我剛剛查詢時出了點小狀況，可以麻煩再問一次嗎？';\n} else {\n  text = raw.replace(/\\{/g, '{{').replace(/\\}/g, '}}');\n}\n\nreturn [{ json: { shouldRetry: false, output: text } }];\n"
+      },
+      "id": "f9a1b2c3-d4e5-4f6a-8b9c-0d1e2f3a4b5c",
+      "name": "回覆內容防護",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c1d2e3f4-0001-0001-0001-000000000001",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.shouldRetry }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-1111-2222-3333-444455556666",
+      "name": "是否需要重試",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1184,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1.5
+      },
+      "id": "b2c3d4e5-2222-3333-4444-555566667777",
+      "name": "重試前等待",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        -304
+      ],
+      "webhookId": "23438e3e-9fd6-4183-9eec-a765bb4515bf"
+    }
+  ],
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "人工智能助理",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "清除記憶",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "顯示輸入中動畫": {
+      "main": [
+        [
+          {
+            "node": "人工智能助理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenWeatherMap": {
+      "ai_tool": [
+        [
+          {
+            "node": "人工智能助理",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判斷訊息類型": {
+      "main": [
+        [
+          {
+            "node": "取得圖片內容",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判斷是否重置指令",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Line Messaging Trigger": {
+      "main": [
+        [
+          {
+            "node": "判斷訊息類型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web_Search_With_Sources": {
+      "ai_tool": [
+        [
+          {
+            "node": "人工智能助理",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "取得圖片內容": {
+      "main": [
+        [
+          {
+            "node": "圖片辨識",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "圖片辨識",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "人工智能助理",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "圖片辨識": {
+      "main": [
+        [
+          {
+            "node": "顯示輸入中動畫",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判斷是否重置指令": {
+      "main": [
+        [
+          {
+            "node": "清除記憶",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "顯示輸入中動畫",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "清除記憶": {
+      "main": [
+        [
+          {
+            "node": "重置確認訊息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重置確認訊息": {
+      "main": [
+        [
+          {
+            "node": "Line Messaging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "人工智能助理": {
+      "main": [
+        [
+          {
+            "node": "回覆內容防護",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "回覆內容防護",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "回覆內容防護": {
+      "main": [
+        [
+          {
+            "node": "是否需要重試",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "是否需要重試": {
+      "main": [
+        [
+          {
+            "node": "重試前等待",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Line Messaging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重試前等待": {
+      "main": [
+        [
+          {
+            "node": "人工智能助理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "dffd1bf9-774e-4f4f-b9b9-d5ee16f70d3b",
+  "tags": [
+    {
+      "id": "H60Xs5ysEEGFdSPo",
+      "name": "chatbot"
+    }
+  ]
+}
