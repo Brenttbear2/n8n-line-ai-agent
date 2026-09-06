@@ -77,25 +77,6 @@
     },
     {
       "parameters": {
-        "locationSelection": "coordinates",
-        "latitude": "={{ $fromAI('Latitude', '該查詢地點的緯度，十進位度數格式（例如台北市約 25.03，板橋區約 25.01），請根據地名自行估算', 'string') }}",
-        "longitude": "={{ $fromAI('Longitude', '該查詢地點的經度，十進位度數格式（例如台北市約 121.56，板橋區約 121.46），請根據地名自行估算', 'string') }}",
-        "language": "zh_tw"
-      },
-      "type": "n8n-nodes-base.openWeatherMapTool",
-      "typeVersion": 1,
-      "position": [400, -112],
-      "id": "cb840096-9b5d-495a-8164-d8872c590f3b",
-      "name": "OpenWeatherMap",
-      "credentials": {
-        "openWeatherMapApi": {
-          "id": "v8Rafcx2b0cS0RD4",
-          "name": "OpenWeatherMap account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -227,7 +208,7 @@
         "jsonOutput": "={\n  \"output\": \"好的，已經幫你清空之前的對話記錄了，我們重新開始吧！\"\n}",
         "options": {}
       },
-      "id": "a8605b7d-46c1-47f3-9247-907df5d31524",
+      "id": "a8605b7d-29ae-40ff-a6ea-96d024fb3287",
       "name": "重置確認訊息",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -303,7 +284,7 @@
         "promptType": "define",
         "text": "={{ $('Line Messaging Trigger').first().json.message.text ?? $('圖片辨識').first().json.output }}",
         "options": {
-          "systemMessage": "=【現在確切時間是 {{ $now.format('yyyy-MM-dd (EEEE) HH:mm') }}（時區 Asia/Taipei）】若使用者問現在幾點、今天日期或星期幾，你必須直接使用上面這個時間回答，絕對禁止自行猜測或編造其他時間。通則原則：時間、天氣、搜尋結果這類會隨時間變動的資訊，若你在之前對話記憶裡講過的內容，與這次系統提供的最新資訊不一致，一律以這次最新的資訊為準，不要因為自己之前講過就沿用舊答案。\n\n你是繁體中文 AI 助理，透過 LINE 與使用者對話。語氣直接、資訊導向：不要用「太好了」「沒問題！」「很高興為你」「哇」之類的客套開場白或情緒性驚嘆詞，不要堆疊語助詞或表情符號，有話直說、切入重點。回答要簡潔口語化（LINE 訊息適合短句），不使用 markdown 格式（LINE 不會渲染），避免超過 200 字。\n\n遇到你沒有把握、或會隨時間變動的具體事實，不要直接回答不知道，依下列優先順序選用工具查詢後再回答（順序影響回覆速度，請一定要依序考慮）：\n1. 一般天氣預報（氣溫、未來幾天預報、降雨機率）→ 用 OpenWeatherMap。\n2. 其他一般即時查詢（新聞、店家資訊、餐廳推薦、時事、颱風動態、水庫水位等具體事實）→ 用網路搜尋工具。\n3. 讀取網頁全文的工具速度最慢（可能超過 20 秒），只有使用者明確要你讀某個特定網址、或前面工具都查不到答案時才使用。\n所有工具都查不到答案時，才誠實告知使用者查不到。\n\n搜尋工具回傳的結果已經包含整理好的來源標題與純文字網址，回覆時請先用自己的話簡要摘要重點，然後將工具回傳的網址原樣保留並附在回覆最後，不要自行刪改或省略連結，也不要包上 markdown 的 [文字](網址) 格式（LINE 只識別純文字網址作為可點擊連結）。",
+          "systemMessage": "=【現在確切時間是 {{ $now.format('yyyy-MM-dd (EEEE) HH:mm') }}（時區 Asia/Taipei）】若使用者問現在幾點、今天日期或星期幾，你必須直接使用上面這個時間回答，絕對禁止自行猜測或編造其他時間。通則原則：時間、天氣、搜尋結果這類會隨時間變動的資訊，若你在之前對話記憶裡講過的內容，與這次系統提供的最新資訊不一致，一律以這次最新的資訊為準，不要因為自己之前講過就沿用舊答案。\n\n你是繁體中文 AI 助理，透過 LINE 與使用者對話。語氣直接、資訊導向：不要用「太好了」「沒問題！」「很高興為你」「哇」之類的客套開場白或情緒性驚嘆詞，不要堆疊語助詞或表情符號，有話直說、切入重點。回答要簡潔口語化（LINE 訊息適合短句），不使用 markdown 格式（LINE 不會渲染），避免超過 200 字。\n\n遇到你沒有把握、或會隨時間變動的具體事實，不要直接回答不知道，依下列優先順序選用工具查詢後再回答（順序影響回覆速度，請一定要依序考慮）：\n1. 天氣相關查詢(單一地點) → 目前天氣用即時天氣/天氣預報/天氣警特報分別查詢；若使用者提供的地名較模糊或非知名地標、需要更精確位置時，可先用地理編碼工具轉換成精確經緯度再查詢天氣。這三個天氣工具都只能查單一地點，假如使用者問的是「全台/全國/整個區域」這種範圍性問題（例如「全台哪裡有雨」、「各地天氣如何」），不要隨機選一個地點作答，直接改用網路搜尋工具。\n2. 店家/餐廳/地點推薦、評分、營業時間等結構化查詢 → 用店家搜尋工具。\n3. 路線/行駛時間/交通方式查詢 → 直接用路線規劃工具，直接傳地址/地名即可，不需要先用地理編碼工具轉換。\n4. 其他一般即時查詢（新聞、時事、颱風動態、水庫水位等具體事實）→ 用網路搜尋工具。\n5. 讀取網頁全文的工具速度最慢（可能超過 20 秒），只有使用者明確要你讀某個特定網址、或前面工具都查不到答案時才使用。\n所有工具都查不到答案時，才誠實告知使用者查不到。\n\n搜尋工具回傳的結果已經包含整理好的來源標題與純文字網址，回覆時請先用自己的話簡要摘要重點，然後將工具回傳的網址原樣保留並附在回覆最後，不要自行刪改或省略連結，也不要包上 markdown 的 [文字](網址) 格式（LINE 只識別純文字網址作為可點擊連結）。",
           "maxIterations": 15,
           "passthroughBinaryImages": true,
           "passthroughBinaryPdfs": true
@@ -353,7 +334,7 @@
     },
     {
       "parameters": {
-        "description": "透過 Google 搜尋查詢即時資訊（新聞、地點、店家、時事等一般主題），回傳已經整理好的 2-3 則重點來源（標題+網址）。query 參數填搜尋關鍵字，location 參數可選填地理位置以縮小搜尋範圍（沒有地點需求就留空）。注意：機票／航班價格查詢一律不要使用這個工具，請改用專門的機票搜尋工具。",
+        "description": "透過 Google 搜尋查詢即時資訊（新聞、地點地理/歷史等一般資訊、時事等一般主題），回傳已經整理好的 2-3 則重點來源（標題+網址）。query 參數填搜尋關鍵字，location 參數可選填地理位置以縮小搜尋範圍（沒有地點需求就留空）。注意：機票／航班價格查詢一律不要使用這個工具，請改用專門的機票搜尋工具；店家/餐廳/地點的評分、地址、營業時間、電話等結構化資訊一律改用店家搜尋工具，只有當店家搜尋工具查不到、或需要相關新聞/評論文章時才用這個工具。",
         "workflowId": {
           "__rl": true,
           "mode": "id",
@@ -377,6 +358,186 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [544, -112]
+    },
+    {
+      "id": "199e4b9a-6a1b-4f7a-9d3e-1a2b3c4d5e01",
+      "name": "get_current_weather",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [400, 60],
+      "parameters": {
+        "toolDescription": "查詢單一指定地點目前的即時天氣狀況，包含氣溫、體感溫度、降雨機率、風速、濕度、UV指數等。location參數請提供緯度與經度。注意：這個工具只能查單一地點，不適合「全台/全國/整個地區」這種範圍性問題，範圍性問題請改用網路搜尋工具。",
+        "method": "GET",
+        "url": "https://weather.googleapis.com/v1/currentConditions:lookup",
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            { "name": "location.latitude", "value": "={{ $fromAI('Latitude', '該查詢地點的緯度，十進位度數格式，請根據地名自行估算', 'string') }}" },
+            { "name": "location.longitude", "value": "={{ $fromAI('Longitude', '該查詢地點的經度，十進位度數格式，請根據地名自行估算', 'string') }}" },
+            { "name": "languageCode", "value": "zh-TW" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth"
+      },
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "Tqha1kcJ5nYLrBCT",
+          "name": "Google Maps Weather API"
+        }
+      }
+    },
+    {
+      "id": "199e4b9a-6a1b-4f7a-9d3e-1a2b3c4d5e02",
+      "name": "get_weather_forecast",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [400, 200],
+      "parameters": {
+        "toolDescription": "查詢單一指定地點未來最多10天的每日天氣預報，包含白天/夜間溫度、降水機率、天氣型態。days參數指定要查詢的天數(1~10，預設5)。注意：這個工具只能查單一地點，不適合「全台/全國/整個地區」這種範圍性問題，範圍性問題請改用網路搜尋工具。",
+        "method": "GET",
+        "url": "https://weather.googleapis.com/v1/forecast/days:lookup",
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            { "name": "location.latitude", "value": "={{ $fromAI('Latitude', '該查詢地點的緯度，十進位度數格式，請根據地名自行估算', 'string') }}" },
+            { "name": "location.longitude", "value": "={{ $fromAI('Longitude', '該查詢地點的經度，十進位度數格式，請根據地名自行估算', 'string') }}" },
+            { "name": "days", "value": "={{ $fromAI('Days', '要查詢未來幾天的預報，範圍1~10，預設5', 'string', '5') }}" },
+            { "name": "languageCode", "value": "zh-TW" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth"
+      },
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "Tqha1kcJ5nYLrBCT",
+          "name": "Google Maps Weather API"
+        }
+      }
+    },
+    {
+      "id": "199e4b9a-6a1b-4f7a-9d3e-1a2b3c4d5e03",
+      "name": "get_weather_alerts",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [400, 340],
+      "parameters": {
+        "toolDescription": "查詢單一指定地點目前生效中的官方天氣警特報，例如颱風、大雨、低溫等特報。location參數請提供緯度與經度。注意：這個工具只能查單一地點有沒有警報，不適合「全台哪裡有警報」這種列舉性/範圍性問題，這類問題請改用網路搜尋工具查詢氣象署官網。",
+        "method": "GET",
+        "url": "https://weather.googleapis.com/v1/publicAlerts:lookup",
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            { "name": "location.latitude", "value": "={{ $fromAI('Latitude', '該查詢地點的緯度，十進位度數格式，請根據地名自行估算', 'string') }}" },
+            { "name": "location.longitude", "value": "={{ $fromAI('Longitude', '該查詢地點的經度，十進位度數格式，請根據地名自行估算', 'string') }}" },
+            { "name": "languageCode", "value": "zh-TW" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth"
+      },
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "Tqha1kcJ5nYLrBCT",
+          "name": "Google Maps Weather API"
+        }
+      }
+    },
+    {
+      "id": "199e4b9a-6a1b-4f7a-9d3e-1a2b3c4d5e04",
+      "name": "geocode_address",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [400, 480],
+      "parameters": {
+        "toolDescription": "將地址或地名轉換成精確的經緯度座標。當需要精確位置(例如給天氣工具使用)、或使用者提供的地名較模糊、非知名地標時使用。address參數請提供要查詢的地址或地名。",
+        "method": "GET",
+        "url": "https://maps.googleapis.com/maps/api/geocode/json",
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            { "name": "address", "value": "={{ $fromAI('Address', '要轉換成經緯度的地址或地名', 'string') }}" },
+            { "name": "language", "value": "zh-TW" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth"
+      },
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "Tqha1kcJ5nYLrBCT",
+          "name": "Google Maps Weather API"
+        }
+      }
+    },
+    {
+      "id": "199e4b9a-6a1b-4f7a-9d3e-1a2b3c4d5e05",
+      "name": "search_places",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [560, 60],
+      "parameters": {
+        "toolDescription": "搜尋店家/地點資訊，回傳名稱、地址、評分、評價人數、目前是否營業中、價位、Google地圖連結。query參數請提供搜尋關鍵字(建議包含地區，例如「信義區評價高的餐廳」)。",
+        "method": "POST",
+        "sendQuery": false,
+        "url": "https://places.googleapis.com/v1/places:searchText",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ \"textQuery\": $fromAI('query', '要搜尋的店家/地點關鍵字，建議包含地區，例如「信義區評價高的餐廳」', 'string') }) }}",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Goog-FieldMask", "value": "places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.currentOpeningHours.openNow,places.priceLevel,places.googleMapsUri" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Vc7W4nf1TQYtcvaL",
+          "name": "Google Weather Header Auth"
+        }
+      }
+    },
+    {
+      "id": "199e4b9a-6a1b-4f7a-9d3e-1a2b3c4d5e06",
+      "name": "compute_route",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [560, 200],
+      "parameters": {
+        "toolDescription": "查詢從出發地到目的地的真實路線、預估行駛時間、距離。直接提供出發地與目的地的地址或地名即可，不需要先轉換成經緯度。travelMode可選DRIVE(開車)/WALK(步行)/BICYCLE(騎車)/TRANSIT(大眾運輸)，預設DRIVE。",
+        "method": "POST",
+        "sendQuery": false,
+        "url": "https://routes.googleapis.com/directions/v2:computeRoutes",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $fromAI('requestBody', '一個JSON物件字串，格式範例：{\"origin\":{\"address\":\"台北車站\"},\"destination\":{\"address\":\"士林夜市\"},\"travelMode\":\"DRIVE\",\"languageCode\":\"zh-TW\",\"units\":\"METRIC\"}。origin.address填出發地地址或地名，destination.address填目的地地址或地名，travelMode可選DRIVE/WALK/BICYCLE/TRANSIT(預設DRIVE)，languageCode固定填zh-TW，units固定填METRIC', 'json') }}",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Goog-FieldMask", "value": "routes.duration,routes.distanceMeters,routes.description,routes.legs.steps.navigationInstruction.instructions" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Vc7W4nf1TQYtcvaL",
+          "name": "Google Weather Header Auth"
+        }
+      }
     }
   ],
   "connections": {
@@ -388,9 +549,6 @@
     },
     "顯示輸入中動畫": {
       "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]]
-    },
-    "OpenWeatherMap": {
-      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
     },
     "判斷訊息類型": {
       "main": [
@@ -450,6 +608,24 @@
       "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
     },
     "網頁資訊查找": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "get_current_weather": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "get_weather_forecast": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "get_weather_alerts": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "geocode_address": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "search_places": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "compute_route": {
       "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
     }
   },
