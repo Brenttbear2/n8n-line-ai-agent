@@ -299,7 +299,7 @@
     },
     {
       "parameters": {
-        "description": "查詢機票／航班價格與班次(僅限機票查詢,不適用天氣、新聞或一般網頁搜尋)。origin/destination填出發地與目的地(城市名或機場代碼皆可),departDate填出發日期(YYYY-MM-DD,必填),returnDate填回程日期(YYYY-MM-DD,單程留空),adults填成人人數(選填,預設1),cabinClass填艙等如economy/business(選填,預設economy)。回傳精選航班與大約票價、訂票連結。",
+        "description": "查詢機票／航班價格與班次(僅限機票查詢,不適用天氣、新聞或一般網頁搜尋)。origin/destination必須填單一的3碼機場IATA代碼(例如台北填TPE,不要填城市名或多個代碼並列;若城市有多個機場如上海/東京/首爾,自行判斷選一個主要機場代碼),departDate填出發日期(YYYY-MM-DD,必填),returnDate填回程日期(YYYY-MM-DD,單程留空),adults填成人人數(選填,預設1),cabinClass填艙等如economy/business(選填,預設economy)。回傳精選航班與大約票價、訂票連結。",
         "workflowId": {
           "__rl": true,
           "mode": "id",
@@ -308,8 +308,8 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "origin": "={{ $fromAI('origin', '出發地城市名稱或機場代碼', 'string') }}",
-            "destination": "={{ $fromAI('destination', '目的地城市名稱或機場代碼', 'string') }}",
+            "origin": "={{ $fromAI('origin', '出發地單一3碼機場IATA代碼,例如TPE,不要填城市名或多個代碼;若城市有多個機場請選一個主要機場', 'string') }}",
+            "destination": "={{ $fromAI('destination', '目的地單一3碼機場IATA代碼,例如FUK,不要填城市名或多個代碼;若城市有多個機場請選一個主要機場', 'string') }}",
             "departDate": "={{ $fromAI('departDate', '出發日期,格式YYYY-MM-DD', 'string') }}",
             "returnDate": "={{ $fromAI('returnDate', '回程日期,格式YYYY-MM-DD,單程查詢則留空', 'string', '') }}",
             "adults": "={{ $fromAI('adults', '成人乘客人數,預設1', 'string', '1') }}",

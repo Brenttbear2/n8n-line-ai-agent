@@ -4,7 +4,7 @@
   "description": null,
   "active": true,
   "createdAt": "2026-08-30T13:32:23.245Z",
-  "updatedAt": "2026-09-02T17:44:12.176Z",
+  "updatedAt": "2026-09-07T02:48:16.583Z",
   "isArchived": false,
   "nodes": [
     {
@@ -297,7 +297,7 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 9 16-22 3,6,9,12 1"
+              "expression": "0 9 16-22 3,6,9,12 *"
             }
           ]
         }
@@ -309,13 +309,40 @@
       "position": [-816, 1328]
     },
     {
+      "id": "da405bbc-f6f1-49ff-b06f-a561e3f0f602",
+      "name": "E-篩選僅週一",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [-688, 1328],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0050-monday-only",
+              "leftValue": "={{ $json[\"Day of week\"] }}",
+              "rightValue": "Monday",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": false
+      }
+    },
+    {
       "parameters": {
         "operation": "send",
         "to": "YOUR_LINE_USER_ID",
         "messages": {
           "values": [
             {
-              "text": "📢 0050季度換股提醒\n\n台灣50指數今日為季度審核生效日，0050成分股可能已調整。\n請確認最新成分股名單，並更新追蹤清單（Data Table: stock_watchlist_tw50_fixed）。"
+              "text": "📢 0050季度換股提醒\n\n台灣50指數今日為季度審核生效日，0050成分股可能已調整。\n請確認最新成分股名單並更新追蹤清單。"
             }
           ]
         }
@@ -385,6 +412,9 @@
       "main": [[{ "node": "D-發送成交量排行", "type": "main", "index": 0 }]]
     },
     "E-0050換股提醒時間": {
+      "main": [[{ "node": "E-篩選僅週一", "type": "main", "index": 0 }]]
+    },
+    "E-篩選僅週一": {
       "main": [[{ "node": "E-發送換股提醒", "type": "main", "index": 0 }]]
     },
     "B-計算漲跌幅並篩選新警報": {

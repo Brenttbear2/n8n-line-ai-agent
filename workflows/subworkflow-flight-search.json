@@ -1,0 +1,75 @@
+{
+  "id": "8yVcjzR7pCfDqybi",
+  "name": "Line AI chatbot 測試-機票搜尋Subworkflow",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            { "name": "origin" },
+            { "name": "destination" },
+            { "name": "departDate" },
+            { "name": "returnDate" },
+            { "name": "adults" },
+            { "name": "cabinClass" }
+          ]
+        }
+      },
+      "id": "b1000000-0000-0000-0000-000000000001",
+      "name": "機票搜尋入口",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [-192, 224]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.kiwi.com",
+        "tool": {
+          "__rl": true,
+          "mode": "id",
+          "value": "search-flight"
+        },
+        "inputMode": "json",
+        "jsonInput": "={{ Object.assign({ flyFrom: $json.origin, flyTo: $json.destination, departureDate: $json.departDate, adults: $json.adults ? Number($json.adults) : 1, cabinClass: $json.cabinClass || 'economy', currency: 'TWD' }, $json.returnDate ? { returnDate: $json.returnDate } : {}) }}",
+        "options": {}
+      },
+      "id": "b1000000-0000-0000-0000-000000000002",
+      "name": "Kiwi_MCP_呼叫",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1.1,
+      "position": [112, 224]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\n\nlet text;\ntry {\n  const sc = raw.structuredContent;\n  if (sc && Array.isArray(sc.itineraries) && sc.itineraries.length > 0) {\n    const currency = sc.currency || '';\n    const top = sc.itineraries.slice(0, 3);\n    const lines = top.map((it, i) => {\n      const out = it.outbound;\n      const inb = it.inbound;\n      const outDesc = out ? `去程 ${(out.departureTime || '').slice(0, 10)} ${out.from}→${out.to} ${out.stops > 0 ? `轉機${out.stops}次` : '直飛'}` : '';\n      const inDesc = inb ? `回程 ${(inb.departureTime || '').slice(0, 10)} ${inb.from}→${inb.to} ${inb.stops > 0 ? `轉機${inb.stops}次` : '直飛'}` : '';\n      return `${i + 1}. ${it.priceFormatted || (it.price + ' ' + currency)}｜${outDesc}${inDesc ? '；' + inDesc : ''}\n訂票：${it.bookingUrl || ''}`;\n    });\n    text = `查到${sc.resultsCount || top.length}筆航班，幣別${currency}，以下為精選前${top.length}筆：\\n\\n` + lines.join('\\n\\n');\n  } else if (typeof raw === 'string') {\n    text = raw;\n  } else {\n    text = JSON.stringify(raw).slice(0, 1500);\n  }\n} catch (e) {\n  text = '機票查詢失敗，請稍後再試。';\n}\n\nreturn [{ json: { output: text } }];\n"
+      },
+      "id": "b1000000-0000-0000-0000-000000000003",
+      "name": "整理機票查詢結果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [384, 224]
+    },
+    {
+      "parameters": {
+        "content": "## Subworkflow：Kiwi 機票搜尋\n\n**輸入**：\n- origin, destination (string，必填) - 出發地/目的地\n- departDate (string，必填) - 出發日期 YYYY-MM-DD\n- returnDate (string，選填) - 回程日期，單程留空\n- adults (string/number，選填，預設1)\n- cabinClass (string，選填，預設economy)\n\n**輸出**：\n- output (string) - 整理好的機票查詢結果文字\n\n呼叫 Kiwi.com 官方 MCP Server (https://mcp.kiwi.com) 的 search-flight 工具。\n\n✅ 2026-09-10實測確認：欄位名稱(flyFrom/flyTo/departureDate/returnDate/adults/cabinClass/currency)本身是對的，真正問題是 origin/destination 必須用單一的3碼 IATA代碼(如TPE/FUK)，不能用「城市名(代碼)」或多代碼並列(如「Shanghai (PVG/SHA)」)，否則Kiwi會安靜回傳resultsCount:0而不報錯。已在主 workflow 的 kiwi 機票資訊查找 工具描述裡強制規AI只能送單一IATA代碼。\n\n被 Line AI chatbot 測試 的 Agent 當作 Tool Workflow 使用，獨立於主 workflow。",
+        "height": 400,
+        "width": 760
+      },
+      "id": "b1000000-0000-0000-0000-000000000004",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-1040, 16]
+    }
+  ],
+  "connections": {
+    "機票搜尋入口": {
+      "main": [[{ "node": "Kiwi_MCP_呼叫", "type": "main", "index": 0 }]]
+    },
+    "Kiwi_MCP_呼叫": {
+      "main": [[{ "node": "整理機票查詢結果", "type": "main", "index": 0 }]]
+    }
+  }
+}
