@@ -16,7 +16,6 @@
       "webhookId": "6b235417-fa59-4b17-8d5b-ef32732f4475",
       "credentials": {
         "lineMessagingApi": {
-          "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       }
@@ -39,7 +38,6 @@
       "name": "Line Messaging",
       "credentials": {
         "lineMessagingApi": {
-          "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       }
@@ -69,7 +67,6 @@
       "position": [128, -384],
       "credentials": {
         "lineMessagingApi": {
-          "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       },
@@ -117,7 +114,6 @@
       "position": [-176, -608],
       "credentials": {
         "lineMessagingApi": {
-          "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       }
@@ -140,7 +136,6 @@
       "name": "OpenRouter Chat Model",
       "credentials": {
         "openRouterApi": {
-          "id": "aa5tnqyliRGqJqCu",
           "name": "OpenRouter account"
         }
       }
@@ -383,7 +378,6 @@
       },
       "credentials": {
         "httpQueryAuth": {
-          "id": "Tqha1kcJ5nYLrBCT",
           "name": "Google Maps Weather API"
         }
       }
@@ -413,7 +407,6 @@
       },
       "credentials": {
         "httpQueryAuth": {
-          "id": "Tqha1kcJ5nYLrBCT",
           "name": "Google Maps Weather API"
         }
       }
@@ -442,7 +435,6 @@
       },
       "credentials": {
         "httpQueryAuth": {
-          "id": "Tqha1kcJ5nYLrBCT",
           "name": "Google Maps Weather API"
         }
       }
@@ -470,7 +462,6 @@
       },
       "credentials": {
         "httpQueryAuth": {
-          "id": "Tqha1kcJ5nYLrBCT",
           "name": "Google Maps Weather API"
         }
       }
@@ -502,7 +493,6 @@
       },
       "credentials": {
         "httpHeaderAuth": {
-          "id": "Vc7W4nf1TQYtcvaL",
           "name": "Google Weather Header Auth"
         }
       }
@@ -534,7 +524,6 @@
       },
       "credentials": {
         "httpHeaderAuth": {
-          "id": "Vc7W4nf1TQYtcvaL",
           "name": "Google Weather Header Auth"
         }
       }

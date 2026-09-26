@@ -95,7 +95,6 @@
       ],
       "credentials": {
         "lineMessagingApi": {
-          "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       }
@@ -145,7 +144,6 @@
       ],
       "credentials": {
         "openRouterApi": {
-          "id": "aa5tnqyliRGqJqCu",
           "name": "OpenRouter account"
         }
       }
@@ -268,7 +266,6 @@
       ],
       "credentials": {
         "lineMessagingApi": {
-          "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       }
@@ -349,7 +346,6 @@
       ],
       "credentials": {
         "lineMessagingApi": {
-          "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       }
@@ -429,7 +425,6 @@
       ],
       "credentials": {
         "lineMessagingApi": {
-          "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       }
@@ -636,7 +631,6 @@
       },
       "credentials": {
         "lineMessagingApi": {
-          "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       }
