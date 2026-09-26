@@ -1,0 +1,94 @@
+{
+  "id": "I8yakCXkyizJQP9G",
+  "name": "台股: 取得交易日狀態",
+  "description": null,
+  "active": true,
+  "createdAt": "2026-09-25T08:41:08.002Z",
+  "updatedAt": "2026-09-25T08:42:27.073Z",
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "7d1c2a10-5b3e-4a8e-9f21-3c6b0e1a7d01",
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "date"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "7d1c2a10-5b3e-4a8e-9f21-3c6b0e1a7d02",
+      "name": "取得證交所休市日",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "url": "https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "7d1c2a10-5b3e-4a8e-9f21-3c6b0e1a7d03",
+      "name": "Return 交易日狀態",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const TZ = 'Asia/Taipei';\nconst WEEK = ['一', '二', '三', '四', '五', '六', '日'];\n\nconst inputDate = String($('Start').first().json.date || '').trim();\nlet today = inputDate ? DateTime.fromISO(inputDate, { zone: TZ }) : $now.setZone(TZ);\nif (!today.isValid) today = $now.setZone(TZ);\ntoday = today.startOf('day');\n\nconst rows = $input.all().map(i => i.json).filter(r => r && r.Date && r.Name);\nconst apiOk = rows.length > 0;\n\nconst toISO = d => d.toFormat('yyyy-LL-dd');\nconst label = d => `${d.toFormat('yyyy/LL/dd')}（週${WEEK[d.weekday - 1]}）`;\nconst short = d => `${d.month}/${d.day}（${WEEK[d.weekday - 1]}）`;\n\n// 證交所清單同時包含休市日與特殊交易日（開始交易日／最後交易日），日期為民國年 YYYMMDD\nconst closed = new Map();\nconst special = new Map();\nfor (const r of rows) {\n  const s = String(r.Date).trim();\n  if (!/^\\d{7}$/.test(s)) continue;\n  const iso = `${1911 + parseInt(s.slice(0, 3), 10)}-${s.slice(3, 5)}-${s.slice(5, 7)}`;\n  const name = String(r.Name).trim().replace(/\\s*\\/\\s*/g, '/');\n  if (/開始交易|最後交易/.test(name)) special.set(iso, name);\n  else closed.set(iso, name.includes('無交易') ? '封關期間無交易' : name);\n}\n\nconst isWeekend = d => d.weekday >= 6;\nconst isOpen = d => !isWeekend(d) && !closed.has(toISO(d));\n\nlet next = today.plus({ days: 1 });\nfor (let i = 0; i < 60 && !isOpen(next); i++) next = next.plus({ days: 1 });\n\nconst tIso = toISO(today);\nconst todayOpen = isOpen(today);\n\nlet breakNotice = '';\nif (todayOpen && apiOk) {\n  const start = today.plus({ days: 1 });\n  const days = Math.round(next.diff(start, 'days').days);\n  const reasons = [];\n  let hasWeekdayHoliday = false;\n  for (let i = 0; i < days; i++) {\n    const d = start.plus({ days: i });\n    const iso = toISO(d);\n    if (closed.has(iso) && !isWeekend(d)) hasWeekdayHoliday = true;\n    const reason = closed.get(iso) || (isWeekend(d) ? '週末' : '');\n    if (reason && !reasons.includes(reason)) reasons.push(reason);\n  }\n  if (hasWeekdayHoliday) {\n    const end = next.minus({ days: 1 });\n    const range = days === 1 ? short(start) : `${short(start)}～${short(end)}`;\n    breakNotice = `📅 休市預告：${range}休市 ${days} 天（${reasons.join('、')}），${short(next)}恢復交易`;\n  }\n}\n\nlet specialNote = special.get(tIso) || '';\nif (specialNote.includes('春節後開始交易')) specialNote += '（開紅盤）';\nif (specialNote.includes('春節前最後交易')) specialNote += '（封關日）';\n\nreturn [{\n  json: {\n    ok: apiOk,\n    date: tIso,\n    dateLabel: label(today),\n    isWeekend: isWeekend(today),\n    isTradingDay: todayOpen,\n    closedReason: todayOpen ? '' : (closed.get(tIso) || '週末'),\n    specialNote: specialNote ? `今日為${specialNote}` : '',\n    nextTradingDate: toISO(next),\n    nextTradingLabel: label(next),\n    breakNotice,\n    error: apiOk ? '' : '無法取得證交所休市日資料，僅依週末判斷'\n  }\n}];"
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "取得證交所休市日",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "取得證交所休市日": {
+      "main": [
+        [
+          {
+            "node": "Return 交易日狀態",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "timezone": "Asia/Taipei",
+    "executionOrder": "v1"
+  },
+  "pinData": null,
+  "tags": []
+}

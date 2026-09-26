@@ -4,7 +4,7 @@
   "description": null,
   "active": true,
   "createdAt": "2026-08-30T13:32:23.245Z",
-  "updatedAt": "2026-09-07T02:48:16.583Z",
+  "updatedAt": "2026-09-25T08:50:31.755Z",
   "isArchived": false,
   "nodes": [
     {
@@ -22,7 +22,10 @@
       "name": "B-盤中檢查每10分鐘",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.4,
-      "position": [-816, 192]
+      "position": [
+        -1280,
+        208
+      ]
     },
     {
       "parameters": {
@@ -32,7 +35,10 @@
       "name": "B-時間窗檢查",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-576, 192]
+      "position": [
+        -1056,
+        208
+      ]
     },
     {
       "parameters": {
@@ -49,17 +55,23 @@
       "name": "B-查詢即時報價",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [-336, 192]
+      "position": [
+        -832,
+        208
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const twseUrl = 'https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_t00.tw|otc_o00.tw&json=1&delay=0';\nfunction sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }\n\nlet quoteResp = $('B-查詢即時報價').first().json;\nlet msgArray = quoteResp.msgArray || [];\n\nlet retries = 0;\nwhile (msgArray.length === 0 && retries < 2) {\n  await sleep(2000);\n  try {\n    quoteResp = await this.helpers.httpRequest({ url: twseUrl, json: true });\n  } catch (e) {\n    quoteResp = {};\n  }\n  msgArray = quoteResp.msgArray || [];\n  retries++;\n}\n\nif (msgArray.length === 0) {\n  throw new Error('台股即時報價API連續回傳空資料，已重試' + retries + '次仍失敗，本次跳過推播');\n}\n\nconst now = $now.setZone('Asia/Taipei').toFormat('HH:mm');\nconst lines = [];\nfor (const s of msgArray) {\n  const z = parseFloat(s.z || s.pz || s.b || '0');\n  const y = parseFloat(s.y || '0');\n  if (!y || !z) continue;\n  const diff = z - y;\n  const pct = (diff / y) * 100;\n  const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';\n  lines.push(`${s.n} ${z.toFixed(2)} ${arrow}${Math.abs(diff).toFixed(2)} (${pct > 0 ? '+' : ''}${pct.toFixed(2)}%)`);\n}\n\nif (lines.length === 0) {\n  throw new Error('台股即時報價API有回應但無有效指數資料');\n}\n\nconst message = `📊 大盤指數速報 ${now}\\n\\n${lines.join('\\n')}`;\nreturn [{ json: { message } }];"
+        "jsCode": "const twseUrl = 'https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_t00.tw|otc_o00.tw&json=1&delay=0';\nfunction sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }\n\nlet quoteResp = $('B-查詢即時報價').first().json;\nlet msgArray = quoteResp.msgArray || [];\n\nlet retries = 0;\nwhile (msgArray.length === 0 && retries < 2) {\n  await sleep(2000);\n  try {\n    quoteResp = await this.helpers.httpRequest({ url: twseUrl, json: true });\n  } catch (e) {\n    quoteResp = {};\n  }\n  msgArray = quoteResp.msgArray || [];\n  retries++;\n}\n\nif (msgArray.length === 0) {\n  throw new Error('台股即時報價API連續回傳空資料，已重試' + retries + '次仍失敗，本次跳過推播');\n}\n\nconst tpNow = $now.setZone('Asia/Taipei');\nconst todayStr = tpNow.toFormat('yyyyLLdd');\nconst sysDate = String((quoteResp.queryTime && quoteResp.queryTime.sysDate) || '');\nif (sysDate && sysDate !== todayStr) {\n  throw new Error(`證交所API伺服器日期(${sysDate})與今日(${todayStr})不符，疑似API異常，本次跳過推播`);\n}\nconst dataDate = String(msgArray[0].d || '');\nif (!dataDate) {\n  throw new Error('台股即時報價缺少資料日期欄位(d)，無法確認今日是否開盤，本次跳過推播');\n}\n// 報價停在上一個交易日＝今日未開盤；只有 09 點這一輪交給後續判斷是否為非預定休市，其餘時段靜默結束\nif (dataDate !== todayStr) {\n  if (tpNow.hour === 9) return [{ json: { marketOpen: false, dataDate } }];\n  return [];\n}\n\nconst now = $now.setZone('Asia/Taipei').toFormat('HH:mm');\nconst lines = [];\nfor (const s of msgArray) {\n  const z = parseFloat(s.z || s.pz || s.b || '0');\n  const y = parseFloat(s.y || '0');\n  if (!y || !z) continue;\n  const diff = z - y;\n  const pct = (diff / y) * 100;\n  const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';\n  lines.push(`${s.n} ${z.toFixed(2)} ${arrow}${Math.abs(diff).toFixed(2)} (${pct > 0 ? '+' : ''}${pct.toFixed(2)}%)`);\n}\n\nif (lines.length === 0) {\n  throw new Error('台股即時報價API有回應但無有效指數資料');\n}\n\nconst message = `📊 大盤指數速報 ${now}\\n\\n${lines.join('\\n')}`;\nreturn [{ json: { marketOpen: true, message } }];"
       },
       "id": "b1b2c3d4-0007-4b1b-9b11-000000000017",
       "name": "B-計算漲跌幅並篩選新警報",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-48, 192]
+      "position": [
+        -608,
+        208
+      ]
     },
     {
       "parameters": {
@@ -77,7 +89,10 @@
       "name": "B-發送盤中警報",
       "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
       "typeVersion": 1,
-      "position": [192, 192],
+      "position": [
+        -160,
+        112
+      ],
       "credentials": {
         "lineMessagingApi": {
           "id": "IpNz4Lm1dCSh5Frn",
@@ -94,7 +109,11 @@
       "name": "C-CNBC財經新聞",
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.2,
-      "position": [-560, 800]
+      "position": [
+        -608,
+        912
+      ],
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -105,7 +124,11 @@
       "name": "C-MarketWatch頭條",
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.2,
-      "position": [-560, 944]
+      "position": [
+        -608,
+        1104
+      ],
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -116,7 +139,10 @@
       "name": "C-OpenRouter模型",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
-      "position": [144, 1008],
+      "position": [
+        120,
+        1160
+      ],
       "credentials": {
         "openRouterApi": {
           "id": "aa5tnqyliRGqJqCu",
@@ -129,7 +155,8 @@
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 8
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-5"
             }
           ]
         }
@@ -138,7 +165,10 @@
       "name": "C-台股盤前新聞時間",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.4,
-      "position": [-800, 672]
+      "position": [
+        -1280,
+        816
+      ]
     },
     {
       "parameters": {
@@ -149,7 +179,11 @@
       "name": "C-自由時報財經",
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.2,
-      "position": [-560, 448]
+      "position": [
+        -608,
+        528
+      ],
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -160,7 +194,11 @@
       "name": "C-UDN經濟日報",
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.2,
-      "position": [-560, 592]
+      "position": [
+        -608,
+        720
+      ],
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -170,39 +208,43 @@
       "name": "C-合併台股新聞來源",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [-320, 672]
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all().map(i => i.json);\nitems.sort((a, b) => new Date(b.pubDate || b.isoDate || 0) - new Date(a.pubDate || a.isoDate || 0));\nconst top = items.slice(0, 20);\nconst listText = top.map((n, i) => `${i + 1}. ${n.title}`).join('\\n');\nconst links = top.map(n => ({ title: n.title, link: n.link }));\nreturn [{ json: { newsList: listText, links } }];"
-      },
-      "id": "c2b2c3d4-0005-4c2c-9c22-000000000035",
-      "name": "C-整理台股最新15則",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [-112, 704]
+      "position": [
+        -384,
+        784
+      ]
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "=你是財經新聞編輯，以下是台股與美股相關財經新聞標題（依時間新舊混合排列，需自行判斷是台股還是美股相關），請整理成繁體中文重點摘要，分成「台股」與「美股」兩個段落，每段條列2~4點最重要的市場動態，語氣精簡專業：\n\n{{ $json.newsList }}",
+        "hasOutputParser": true,
+        "text": "=你是資深財經新聞編輯，負責為台灣投資人挑選開盤前最值得關注的新聞。今天是 {{ $now.setZone('Asia/Taipei').toFormat('yyyy/LL/dd') }}。\n\n【行情背景】\n{{ $json.marketContext || '（無資料）' }}\n\n【候選新聞】（格式：[編號] (來源) 標題）\n{{ $json.newsList }}\n\n【任務】\n從候選新聞中挑出「台股」與「美股／國際市場」各最重要的 3 則，並為每則寫一句摘要。\n\n【挑選優先順序】\n1. 直接影響大盤或權值股的消息（例如台積電等權值股、指數漲跌原因、美股主要指數收盤表現）\n2. 法人資金動向、央行與利率、匯率、債市\n3. 重大財報、產業或供應鏈消息\n優先挑選能解釋上方行情背景的新聞。\n\n【排除】\n- 個人理財、生活、人物故事、職場心情類文章\n- 同一系列或同一事件的多篇報導，只選資訊最完整的一則\n- 與股市沒有明顯關聯的政治或社會新聞\n\n【輸出規則】\n- id 只能使用候選清單中的編號，不可自行捏造；候選清單為空時，taiwan 與 us 都回傳空陣列\n- summary 使用繁體中文，一句話、40 字以內，語氣精簡專業，不要使用任何 Markdown 符號\n- summary 只能根據標題內容改寫，不可加入標題沒有的事實、數字或推測\n- 台股與美股各 3 則；符合條件的新聞不足時可以少於 3 則，不要硬湊\n- 只輸出 JSON，不要加任何說明文字，不要用 Markdown 程式碼區塊包住",
         "batching": {}
       },
       "id": "c2b2c3d4-0006-4c2c-9c22-000000000036",
       "name": "C-AI生成台股摘要",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
-      "position": [192, 832]
+      "position": [
+        160,
+        944
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
-        "jsCode": "const summary = $json.text;\nconst links = $('C-整理台股最新15則').first().json.links.slice(0, 5);\nconst linksText = links.map((l, i) => `${i + 1}. ${l.link}`).join('\\n');\nreturn [{ json: { finalMessage: `📊 台股+美股財經速報\\n\\n${summary}\\n\\n🔗 原文連結:\\n${linksText}` } }];"
+        "jsCode": "const st = $('C-取得交易日狀態').first().json || {};\nconst cand = $('C-整理候選新聞').first().json || {};\nconst byId = new Map((cand.candidates || []).map(c => [c.id, c]));\n\n// 摘要節點失敗時 onError 會繼續往下走，這裡容許各種輸出形狀\nconst j = $input.first().json || {};\nlet out = j.output !== undefined ? j.output : j;\nif (typeof out === 'string') { try { out = JSON.parse(out.replace(/```(json)?/g, '')); } catch (e) { out = null; } }\nconst valid = out && typeof out === 'object' && (Array.isArray(out.taiwan) || Array.isArray(out.us));\n\nconst used = new Set();\nconst clean = s => String(s || '').replace(/[*#`>\\[\\]]/g, '').replace(/\\s+/g, ' ').trim();\n// 連結依編號從候選清單取回，不採用 AI 寫出的網址\nfunction section(list) {\n  const lines = [];\n  let n = 0;\n  for (const it of Array.isArray(list) ? list : []) {\n    const c = byId.get(Number(it && it.id));\n    const summary = clean(it && it.summary);\n    if (!c || !summary || used.has(c.id)) continue;\n    used.add(c.id);\n    n++;\n    lines.push(`${n}. ${summary}`, `🔗 ${c.link}`);\n    if (n >= 3) break;\n  }\n  return lines.length ? lines.join('\\n') : '今日無符合條件的重點新聞';\n}\n\nconst parts = [];\nif (st.isTradingDay === false && !st.isWeekend) {\n  parts.push([\n    `🔕 台股今日 ${st.dateLabel}休市`,\n    `原因：${st.closedReason}`,\n    '今日不推播盤中速報與成交量排行',\n    `下次開盤：${st.nextTradingLabel}`\n  ].join('\\n'));\n}\nif (st.specialNote) parts.push(`🎯 ${st.specialNote}`);\n\nconst title = ['📊 台股+美股財經速報', cand.indexBrief || ''].filter(Boolean).join('\\n');\nif (valid) {\n  parts.push([title, '━━━━━━━━━━', '📈 台股', section(out.taiwan), '━━━━━━━━━━', '🌍 美股', section(out.us)].join('\\n'));\n} else {\n  parts.push(`${title}\\n⚠️ 今日新聞摘要生成失敗，請稍後至財經網站查看`);\n}\n\nreturn [{ json: { finalMessage: parts.join('\\n\\n') } }];"
       },
       "id": "c2b2c3d4-0007-4c2c-9c22-000000000037",
       "name": "C-組合台股訊息",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [576, 704]
+      "position": [
+        592,
+        816
+      ]
     },
     {
       "parameters": {
@@ -220,7 +262,10 @@
       "name": "C-發送台股新聞",
       "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
       "typeVersion": 1,
-      "position": [752, 704],
+      "position": [
+        816,
+        816
+      ],
       "credentials": {
         "lineMessagingApi": {
           "id": "IpNz4Lm1dCSh5Frn",
@@ -234,7 +279,13 @@
           "interval": [
             {
               "field": "weeks",
-              "triggerAtDay": [1, 2, 3, 4, 5],
+              "triggerAtDay": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
               "triggerAtHour": 15
             }
           ]
@@ -244,7 +295,10 @@
       "name": "D-收盤成交量排行時間",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.4,
-      "position": [-816, 1120]
+      "position": [
+        -1280,
+        1328
+      ]
     },
     {
       "parameters": {
@@ -255,17 +309,23 @@
       "name": "D-取得今日成交量排行",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [-560, 1120]
+      "position": [
+        -832,
+        1328
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const resp = $input.first().json;\nif (resp.stat !== 'OK' || !resp.data || !resp.data.length) {\n  return [{ json: { message: `⚠️ 今日無成交量排行資料（可能非交易日）` } }];\n}\nconst rows = resp.data.slice(0, 20);\nconst lines = rows.map(r => {\n  const rank = r[0], code = r[1], name = r[2], volumeRaw = r[3];\n  const shares = parseInt(String(volumeRaw).replace(/,/g, ''), 10);\n  const lots = Math.round(shares / 1000);\n  return `${rank}. ${name}(${code}) 量:${lots.toLocaleString()}張`;\n});\nconst message = `📊 今日成交量排行前20名（${resp.date}）\\n\\n${lines.join('\\n')}`;\nreturn [{ json: { message } }];"
+        "jsCode": "const resp = $input.first().json;\nif (resp.stat !== 'OK' || !resp.data || !resp.data.length) {\n  return [];\n}\nconst rows = resp.data.slice(0, 20);\nconst lines = rows.map(r => {\n  const rank = r[0], code = r[1], name = r[2], volumeRaw = r[3];\n  const shares = parseInt(String(volumeRaw).replace(/,/g, ''), 10);\n  const lots = Math.round(shares / 1000);\n  return `${rank}. ${name}(${code}) 量:${lots.toLocaleString()}張`;\n});\nlet message = `📊 今日成交量排行前20名（${resp.date}）\\n\\n${lines.join('\\n')}`;\nconst st = $('D-取得交易日狀態').first().json || {};\nif (st.breakNotice) message += `\\n\\n${st.breakNotice}`;\nreturn [{ json: { message } }];"
       },
       "id": "d1b2c3d4-0003-4d1d-9d11-000000000043",
       "name": "D-整理成交量排行前20",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-320, 1120]
+      "position": [
+        -608,
+        1328
+      ]
     },
     {
       "parameters": {
@@ -283,7 +343,10 @@
       "name": "D-發送成交量排行",
       "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
       "typeVersion": 1,
-      "position": [-80, 1120],
+      "position": [
+        -384,
+        1328
+      ],
       "credentials": {
         "lineMessagingApi": {
           "id": "IpNz4Lm1dCSh5Frn",
@@ -306,14 +369,20 @@
       "name": "E-0050換股提醒時間",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.4,
-      "position": [-816, 1328]
+      "position": [
+        -1280,
+        1552
+      ]
     },
     {
       "id": "da405bbc-f6f1-49ff-b06f-a561e3f0f602",
       "name": "E-篩選僅週一",
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2.3,
-      "position": [-688, 1328],
+      "position": [
+        -1056,
+        1552
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -327,7 +396,10 @@
               "id": "e0050-monday-only",
               "leftValue": "={{ $json[\"Day of week\"] }}",
               "rightValue": "Monday",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "combinator": "and"
@@ -351,84 +423,584 @@
       "name": "E-發送換股提醒",
       "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
       "typeVersion": 1,
-      "position": [-560, 1328],
+      "position": [
+        -832,
+        1552
+      ],
       "credentials": {
         "lineMessagingApi": {
           "id": "IpNz4Lm1dCSh5Frn",
           "name": "Line Messaging account"
         }
       }
+    },
+    {
+      "id": "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f01",
+      "name": "C-取得交易日狀態",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -1056,
+        816
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "I8yakCXkyizJQP9G",
+          "cachedResultName": "台股: 取得交易日狀態"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": ""
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f02",
+      "name": "C-取得昨日收盤",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "position": [
+        -832,
+        816
+      ],
+      "parameters": {
+        "url": "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_t00.tw|otc_o00.tw&json=1&delay=0",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f03",
+      "name": "C-整理候選新聞",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        816
+      ],
+      "parameters": {
+        "jsCode": "const TZ = 'Asia/Taipei';\nconst SOURCE = { 'ec.ltn.com.tw': '自由時報', 'news.ltn.com.tw': '自由時報', 'money.udn.com': '經濟日報', 'www.cnbc.com': 'CNBC', 'www.marketwatch.com': 'MarketWatch' };\nconst PER_SOURCE = 10;\nconst cutoffMs = $now.minus({ hours: 24 }).toMillis();\n\n// 只取最近24小時，每個來源各取最新10則，避免單一來源洗版\nconst groups = new Map();\nfor (const { json: n } of $input.all()) {\n  if (!n || !n.title || !n.link) continue;\n  const t = Date.parse(n.isoDate || n.pubDate || '');\n  if (!t || t < cutoffMs) continue;\n  const m = String(n.link).match(/^https?:\\/\\/([^\\/?#]+)/i);\n  if (!m) continue;\n  const host = m[1].toLowerCase();\n  if (!groups.has(host)) groups.set(host, []);\n  groups.get(host).push({ title: String(n.title).replace(/\\s+/g, ' ').trim(), link: n.link, t, source: SOURCE[host] || host });\n}\n\nconst candidates = [];\nfor (const list of groups.values()) {\n  list.sort((a, b) => b.t - a.t);\n  const seen = new Set();\n  for (const n of list) {\n    if (seen.has(n.title)) continue;\n    seen.add(n.title);\n    candidates.push({ id: candidates.length + 1, source: n.source, title: n.title, link: n.link });\n    if (seen.size >= PER_SOURCE) break;\n  }\n}\n\nconst parts = [];\ntry {\n  for (const s of $('C-取得昨日收盤').first().json.msgArray || []) {\n    const z = parseFloat(s.z || s.pz || '0');\n    const y = parseFloat(s.y || '0');\n    if (!z || !y) continue;\n    const diff = z - y;\n    const pct = (diff / y) * 100;\n    const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';\n    const d = String(s.d || '');\n    const dLabel = d.length === 8 ? `${Number(d.slice(4, 6))}/${Number(d.slice(6, 8))} ` : '';\n    const name = s.n === '發行量加權股價指數' ? '加權指數' : s.n;\n    const price = z.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n    parts.push(`${name} ${dLabel}收盤 ${price} ${arrow}${Math.abs(diff).toFixed(2)}（${pct > 0 ? '+' : ''}${pct.toFixed(2)}%）`);\n  }\n} catch (e) {}\n\nreturn [{\n  json: {\n    newsList: candidates.map(c => `[${c.id}] (${c.source}) ${c.title}`).join('\\n'),\n    candidates,\n    candidateCount: candidates.length,\n    marketContext: parts.join('\\n'),\n    indexBrief: parts[0] || ''\n  }\n}];"
+      }
+    },
+    {
+      "id": "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f04",
+      "name": "C-新聞格式解析器",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        248,
+        1160
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "autoFix": false,
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"taiwan\": {\n      \"type\": \"array\",\n      \"description\": \"台股相關重點新聞，依重要性排序，最多3則\",\n      \"maxItems\": 3,\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": { \"type\": \"integer\", \"description\": \"候選新聞編號\" },\n          \"summary\": { \"type\": \"string\", \"description\": \"一句話繁體中文摘要，40字以內\" }\n        },\n        \"required\": [\"id\", \"summary\"]\n      }\n    },\n    \"us\": {\n      \"type\": \"array\",\n      \"description\": \"美股與國際市場重點新聞，依重要性排序，最多3則\",\n      \"maxItems\": 3,\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": { \"type\": \"integer\", \"description\": \"候選新聞編號\" },\n          \"summary\": { \"type\": \"string\", \"description\": \"一句話繁體中文摘要，40字以內\" }\n        },\n        \"required\": [\"id\", \"summary\"]\n      }\n    }\n  },\n  \"required\": [\"taiwan\", \"us\"]\n}"
+      }
+    },
+    {
+      "id": "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f06",
+      "name": "B-今日是否開盤",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        208
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "b-market-open",
+              "leftValue": "={{ $json.marketOpen }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f07",
+      "name": "B-取得交易日狀態",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        304
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "I8yakCXkyizJQP9G",
+          "cachedResultName": "台股: 取得交易日狀態"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": ""
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f08",
+      "name": "B-判斷非預定休市",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        304
+      ],
+      "parameters": {
+        "jsCode": "const st = $input.first().json || {};\nconst dataDate = String($('B-計算漲跌幅並篩選新警報').first().json.dataDate || '');\n// 預定休市（證交所清單內）08:00 已通知，這裡不重複推播\nif (st.ok && st.isTradingDay === false) return [];\nconst last = dataDate.length === 8 ? `${dataDate.slice(0, 4)}/${dataDate.slice(4, 6)}/${dataDate.slice(6, 8)}` : '上一個交易日';\nconst reason = st.ok ? '非預定休市（可能因颱風等因素）' : '休市原因無法確認（證交所休市日資料暫時無法取得）';\nreturn [{\n  json: {\n    message: [\n      `⚠️ 台股今日 ${st.dateLabel || ''}未開盤`,\n      reason,\n      '今日不推播盤中速報與成交量排行',\n      `目前報價仍停留在 ${last} 的收盤資料`\n    ].join('\\n')\n  }\n}];"
+      }
+    },
+    {
+      "id": "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f09",
+      "name": "B-發送休市通知",
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [
+        288,
+        304
+      ],
+      "parameters": {
+        "operation": "send",
+        "to": "YOUR_LINE_USER_ID",
+        "messages": {
+          "values": [
+            {
+              "text": "={{ $json.message }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "IpNz4Lm1dCSh5Frn",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "id": "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f10",
+      "name": "D-取得交易日狀態",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -1056,
+        1328
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "I8yakCXkyizJQP9G",
+          "cachedResultName": "台股: 取得交易日狀態"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": ""
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
     "B-盤中檢查每10分鐘": {
-      "main": [[{ "node": "B-時間窗檢查", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "B-時間窗檢查",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "B-查詢即時報價": {
-      "main": [[{ "node": "B-計算漲跌幅並篩選新警報", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "B-計算漲跌幅並篩選新警報",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "C-CNBC財經新聞": {
-      "main": [[{ "node": "C-合併台股新聞來源", "type": "main", "index": 2 }]]
+      "main": [
+        [
+          {
+            "node": "C-合併台股新聞來源",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
     },
     "C-MarketWatch頭條": {
-      "main": [[{ "node": "C-合併台股新聞來源", "type": "main", "index": 3 }]]
+      "main": [
+        [
+          {
+            "node": "C-合併台股新聞來源",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
     },
     "C-OpenRouter模型": {
-      "ai_languageModel": [[{ "node": "C-AI生成台股摘要", "type": "ai_languageModel", "index": 0 }]]
+      "ai_languageModel": [
+        [
+          {
+            "node": "C-AI生成台股摘要",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     },
     "C-台股盤前新聞時間": {
-      "main": [[
-        { "node": "C-自由時報財經", "type": "main", "index": 0 },
-        { "node": "C-UDN經濟日報", "type": "main", "index": 0 },
-        { "node": "C-CNBC財經新聞", "type": "main", "index": 0 },
-        { "node": "C-MarketWatch頭條", "type": "main", "index": 0 }
-      ]]
+      "main": [
+        [
+          {
+            "node": "C-取得交易日狀態",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "C-自由時報財經": {
-      "main": [[{ "node": "C-合併台股新聞來源", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "C-合併台股新聞來源",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "C-UDN經濟日報": {
-      "main": [[{ "node": "C-合併台股新聞來源", "type": "main", "index": 1 }]]
+      "main": [
+        [
+          {
+            "node": "C-合併台股新聞來源",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
     },
     "C-合併台股新聞來源": {
-      "main": [[{ "node": "C-整理台股最新15則", "type": "main", "index": 0 }]]
-    },
-    "C-整理台股最新15則": {
-      "main": [[{ "node": "C-AI生成台股摘要", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "C-整理候選新聞",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "C-AI生成台股摘要": {
-      "main": [[{ "node": "C-組合台股訊息", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "C-組合台股訊息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "C-組合台股訊息": {
-      "main": [[{ "node": "C-發送台股新聞", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "C-發送台股新聞",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "D-收盤成交量排行時間": {
-      "main": [[{ "node": "D-取得今日成交量排行", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "D-取得交易日狀態",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "D-取得今日成交量排行": {
-      "main": [[{ "node": "D-整理成交量排行前20", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "D-整理成交量排行前20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "D-整理成交量排行前20": {
-      "main": [[{ "node": "D-發送成交量排行", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "D-發送成交量排行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "E-0050換股提醒時間": {
-      "main": [[{ "node": "E-篩選僅週一", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "E-篩選僅週一",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "E-篩選僅週一": {
-      "main": [[{ "node": "E-發送換股提醒", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "E-發送換股提醒",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "B-計算漲跌幅並篩選新警報": {
-      "main": [[{ "node": "B-發送盤中警報", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "B-今日是否開盤",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "B-時間窗檢查": {
-      "main": [[{ "node": "B-查詢即時報價", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "B-查詢即時報價",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "C-取得交易日狀態": {
+      "main": [
+        [
+          {
+            "node": "C-取得昨日收盤",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "C-取得昨日收盤": {
+      "main": [
+        [
+          {
+            "node": "C-自由時報財經",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "C-UDN經濟日報",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "C-CNBC財經新聞",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "C-MarketWatch頭條",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "C-整理候選新聞": {
+      "main": [
+        [
+          {
+            "node": "C-AI生成台股摘要",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "C-新聞格式解析器": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "C-AI生成台股摘要",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B-今日是否開盤": {
+      "main": [
+        [
+          {
+            "node": "B-發送盤中警報",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "B-取得交易日狀態",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B-取得交易日狀態": {
+      "main": [
+        [
+          {
+            "node": "B-判斷非預定休市",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B-判斷非預定休市": {
+      "main": [
+        [
+          {
+            "node": "B-發送休市通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D-取得交易日狀態": {
+      "main": [
+        [
+          {
+            "node": "D-取得今日成交量排行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "nodeGroups": [
     {
-      "id": "e62e7642-c063-4952-99a8-39c47ee2ccf7",
+      "id": "ae7c24e2-8491-4e3d-88c5-cb017a6086fd",
       "name": "AI新聞摘要",
-      "nodeIds": ["c1b2c3d4-0006-4c1c-9c11-000000000026", "c2b2c3d4-0006-4c2c-9c22-000000000036"]
+      "nodeIds": [
+        "c1b2c3d4-0006-4c1c-9c11-000000000026",
+        "c2b2c3d4-0006-4c2c-9c22-000000000036",
+        "5e0c1f2a-7b3d-4c9e-8a1f-2b3c4d5e6f04"
+      ]
     }
   ],
   "settings": {

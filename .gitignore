@@ -5,15 +5,30 @@
 *.key
 *.p12
 *.pfx
+*.jks
+*.keystore
 *credentials*.json
 *secret*
+service-account*.json
 id_rsa
 id_rsa.*
 
-# n8n 本機資料（若曾複製到本資料夾）
+# n8n 本機資料（若曾複製到本資料夾）— 資料庫內含加密憑證，config 內含加密金鑰
 .n8n/
 n8n_data/
+*.sqlite
+*.sqlite-journal
+*.db
 
-# 系統/編輯器雜項
+# Docker / 隧道設定（常含 N8N_ENCRYPTION_KEY、ngrok authtoken）
+docker-compose*.yml
+docker-compose*.yaml
+ngrok.yml
+
+# Claude Code 本機設定（含個人權限設定）
+.claude/settings.local.json
+
+# 日誌 / 系統 / 編輯器雜項
+*.log
 .DS_Store
 Thumbs.db
