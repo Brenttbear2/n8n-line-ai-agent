@@ -4,7 +4,7 @@
   "description": null,
   "active": true,
   "createdAt": "2026-08-30T13:32:23.245Z",
-  "updatedAt": "2026-09-25T08:50:31.755Z",
+  "updatedAt": "2026-09-28T18:29:41.017Z",
   "isArchived": false,
   "nodes": [
     {
@@ -19,24 +19,11 @@
         }
       },
       "id": "b1b2c3d4-0001-4b1b-9b11-000000000011",
-      "name": "B-盤中檢查每10分鐘",
+      "name": "B-盤中速報每小時",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.4,
       "position": [
         -1280,
-        208
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const now = $now.setZone('Asia/Taipei');\nconst hm = now.hour * 100 + now.minute;\nif (hm > 1330) { return []; }\nreturn $input.all();"
-      },
-      "id": "b1b2c3d4-0002-4b1b-9b11-000000000012",
-      "name": "B-時間窗檢查",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -1056,
         208
       ]
     },
@@ -677,17 +664,6 @@
     }
   ],
   "connections": {
-    "B-盤中檢查每10分鐘": {
-      "main": [
-        [
-          {
-            "node": "B-時間窗檢查",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "B-查詢即時報價": {
       "main": [
         [
@@ -864,17 +840,6 @@
         ]
       ]
     },
-    "B-時間窗檢查": {
-      "main": [
-        [
-          {
-            "node": "B-查詢即時報價",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "C-取得交易日狀態": {
       "main": [
         [
@@ -979,6 +944,17 @@
         [
           {
             "node": "D-取得今日成交量排行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B-盤中速報每小時": {
+      "main": [
+        [
+          {
+            "node": "B-查詢即時報價",
             "type": "main",
             "index": 0
           }
